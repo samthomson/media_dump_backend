@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 
 	'''
-	file table
+	files
 	'''
 	cursor.execute('''
 		CREATE TABLE IF NOT EXISTS files(
@@ -22,14 +22,14 @@ if __name__ == '__main__':
 		)
 		''')
 	cursor.execute('''
-		CREATE UNIQUE INDEX path_index ON files (path)
+		CREATE UNIQUE INDEX IF NOT EXISTS path_index ON files (path)
 	''')
 	cursor.execute('''
-		CREATE INDEX id_index ON files (id)
+		CREATE INDEX IF NOT EXISTS id_index ON files (id)
 	''')
 
 	'''
-	log table
+	log
 	'''
 	cursor.execute('''
 		CREATE TABLE IF NOT EXISTS log(
@@ -42,13 +42,39 @@ if __name__ == '__main__':
 		)
 		''')
 	cursor.execute('''
-		CREATE INDEX system_index ON log (system)
+		CREATE INDEX IF NOT EXISTS system_index ON log (system)
 	''')
 	cursor.execute('''
-		CREATE INDEX action_index ON log (action)
+		CREATE INDEX IF NOT EXISTS action_index ON log (action)
 	''')
 	cursor.execute('''
-		CREATE INDEX date_index ON log (datetime)
+		CREATE INDEX IF NOT EXISTS date_index ON log (datetime)
+	''')
+
+
+	'''
+	queue
+	'''
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS queue(
+		id INTEGER NOT NULL,
+		queue VARCHAR(32),
+		file_id INTEGER,
+		datetime_from DATETIME,
+		PRIMARY KEY (id)
+		)
+		''')
+	cursor.execute('''
+		CREATE INDEX IF NOT EXISTS id_index ON queue (id)
+	''')
+	cursor.execute('''
+		CREATE INDEX IF NOT EXISTS queue_index ON queue (queue)
+	''')
+	cursor.execute('''
+		CREATE INDEX IF NOT EXISTS file_id_index ON queue (file_id)
+	''')
+	cursor.execute('''
+		CREATE INDEX IF NOT EXISTS datetime_from_index ON queue (datetime_from)
 	''')
 
 	db.close()
