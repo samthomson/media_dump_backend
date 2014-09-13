@@ -26,7 +26,6 @@ def process_path(i_id):
 		tag(i_id, "directory.word", s_word)
 
 def process_location(i_id):
-
 	s_path = s_seed_dir + s_path_from_id(i_id)
 
 	o_image = Image.open(s_path)
@@ -39,7 +38,18 @@ def process_location(i_id):
 
 
 def process_thumbs(i_id):
-	print "TODO"
+	print "make thumb for %s" % i_id
+	s_path = s_path_from_id(i_id)
+	s_source_path = s_seed_dir + s_path_from_id(i_id)
+
+	im_temp = Image.open(s_source_path)
+	i_shortest_side_of_temp = min(im_temp.size)
+	# ensure it's a square
+	im_temp = im_temp.crop((0,0,i_shortest_side_of_temp,i_shortest_side_of_temp))
+	# make a thumbnail, as per block size
+	im_temp.thumbnail((125, 125))
+	im_temp.save("../thumb/" + str(i_id) + '.jpg');
+	print "made thumb for %s @ %s" % (i_id,s_path.replace("/","-"))
 
 def tag(s_file_id, s_tag_type, s_value):
 	if s_value != "":
@@ -81,7 +91,7 @@ if __name__ == '__main__':
 		if s_queue == "path":
 			process_path(i_file_id)
 
-		if s_queue == "thumbnails":
+		if s_queue == "make_thumbnails":
 			process_thumbs(i_file_id)
 
 		if s_queue == "location":
