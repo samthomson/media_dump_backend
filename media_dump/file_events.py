@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, time
 import sqlite3 as sqlite
 
 from os import listdir
@@ -37,13 +37,13 @@ def process_new_file(s_path):
 		queue_file(s_file_id, "detection")
 		queue_file(s_file_id, "location")
 		queue_file(s_file_id, "date_taken")
+		queue_file(s_file_id, "make_thumbnails")
 
 	# default queue
 	queue_file(s_file_id, "path")
-	queue_file(s_file_id, "type")
 
 
-def queue_file(s_file_id, s_queue, s_datetime_from = "datetime()"):
+def queue_file(s_file_id, s_queue, s_datetime_from = time.strftime('%Y-%m-%d %H:%M:%S')):
 	db_cursor.execute('''INSERT INTO queue (queue, file_id, datetime_from) VALUES (?,?,?)''', (s_queue, s_file_id, s_datetime_from,))
 
 
@@ -60,7 +60,7 @@ def process_dead_file(s_path):
 	s_file_id = db_cursor.lastrowid
 
 	# remove from any queues
-	print "delete ID: %s" % i_file_id
+	#print "delete ID: %s" % i_file_id
 	db_cursor.execute('''DELETE FROM queue WHERE file_id=?''', (i_file_id,))
 	# remove tags
 	# TODO
