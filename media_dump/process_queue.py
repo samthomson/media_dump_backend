@@ -1,8 +1,11 @@
 import os, sys, time
 import sqlite3 as sqlite
-#from get_lat_lon_exif_pil import gpsdata
+#from easy_thumbnails.files import get_thumbnailer
+
 execfile("get_lat_lon_exif_pil.py")
-#import get_lat_lon_exif_pil
+
+import pymongo
+from pymongo import MongoClient
 
 
 def process_path(i_id):
@@ -51,9 +54,48 @@ def process_thumbs(i_id):
 	im_temp.save("../thumb/" + str(i_id) + '.jpg');
 	print "made thumb for %s @ %s" % (i_id,s_path.replace("/","-"))
 
+
+
+
+
+
+
+
+
+
 def tag(s_file_id, s_tag_type, s_value):
 	if s_value != "":
-		db_cursor.execute('''INSERT INTO tags (file_id, type, value) VALUES (?,?,?)''', (s_file_id, s_tag_type, s_value,))
+		#db_cursor.execute('''INSERT INTO tags (file_id, type, value) VALUES (?,?,?)''', (s_file_id, s_tag_type, s_value,))
+		item = collection_files.find_one({'file_id': s_file_id});
+		if item != None:
+			# item already exists, add tag to it
+			#tags = item.tags
+			#tags.add({"type": s_tag_type, "value": s_value})
+			print "update"
+			#collection_files.update({'file_id': s_file_id},{'tags': [{"type": s_tag_type, "value": s_value}]})
+
+			collection_files.update({'file_id' : s_file_id}, { '$push':{'tags': {"type": s_tag_type, "value": s_value}}})
+		else:
+			# create document with tag as property
+			print "insert"
+			collection_files.insert({'file_id': s_file_id, 'tags': [{"type": s_tag_type, "value": s_value}]})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def s_path_from_id(i_file_id):
 	db_cursor.execute('''SELECT path FROM files WHERE id=?''', (i_file_id,))
@@ -66,6 +108,7 @@ def queue_file(s_file_id, s_queue, s_datetime_from = time.strftime('%Y-%m-%d %H:
 	db_cursor.execute('''INSERT INTO queue (queue, file_id, datetime_from) VALUES (?,?,?)''', (s_queue, s_file_id, s_datetime_from,))
 
 def dequeue_file(i_id):
+	#print "dequeue, off for now"
 	db_cursor.execute('''DELETE FROM queue WHERE file_id=?''', (i_id,))
 
 if __name__ == '__main__':
@@ -75,6 +118,12 @@ if __name__ == '__main__':
 	# connect to db
 	db = sqlite.connect('media_dump_db')
 	db_cursor = db.cursor()
+
+	mongo_client = MongoClient()
+	# get mongo database
+	mongo_db = mongo_client.media_dump
+	# get files collection (table)
+	collection_files = mongo_db.files
 
 	# get first item
 
@@ -102,7 +151,7 @@ if __name__ == '__main__':
 		dequeue_file(i_file_id)
 
 		# re-queue for lucene
-		queue_file(i_file_id, "lucene.index")
+		#queue_file(i_file_id, "lucene.index")
 
 	db.commit()
 	db.close()

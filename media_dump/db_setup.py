@@ -1,8 +1,7 @@
 # create sql db with indexed tables
-
 import sqlite3 as sqlite
-
-
+import pymongo
+from pymongo import MongoClient
 
 if __name__ == '__main__':
 
