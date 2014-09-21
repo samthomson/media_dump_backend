@@ -15,18 +15,37 @@ def process_path(i_id):
 	s_path = s_path_from_id(i_id)
 	s_path_no_ext = os.path.splitext(s_path)[0]
 
+	s_path_folders = s_path_no_ext.rsplit('/',1)[0]
+	s_path_filename = s_path_no_ext.rsplit('/',1)[1]
+
+	tag(i_id, "text", "*")
+
 	tag(i_id, "directory.path", s_path)
 	tag(i_id, "directory.ext", os.path.splitext(s_path)[1].replace('.',''))
+
 	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
 		tag(i_id, "file.type", "image")
 
+	''' go through folder path
+	'''
 	for ch_delimiter in ['(', ')', '/', '-', '_', '.', ',']:
-		if ch_delimiter in s_path_no_ext:
-			s_path_no_ext = s_path_no_ext.replace(ch_delimiter, " ")
+		if ch_delimiter in s_path_folders:
+			s_path_folders = s_path_folders.replace(ch_delimiter, " ")
 
-	sl_dir_words = s_path_no_ext.split(' ')
+	sl_dir_words = s_path_folders.split(' ')
 	for s_word in sl_dir_words:
-		tag(i_id, "directory.word", s_word)
+		tag(i_id, "directory.folderword", s_word)
+		tag(i_id, "filter.value", s_word)
+
+	''' go through file name
+	'''
+	for ch_delimiter in ['(', ')', '/', '-', '_', '.', ',']:
+		if ch_delimiter in s_path_filename:
+			s_path_filename = s_path_filename.replace(ch_delimiter, " ")
+
+	sl_dir_words = s_path_filename.split(' ')
+	for s_word in sl_dir_words:
+		tag(i_id, "directory.fileword", s_word)
 
 def process_location(i_id):
 	s_path = s_seed_dir + s_path_from_id(i_id)
@@ -65,6 +84,10 @@ def process_thumbs(i_id):
 
 def tag(s_file_id, s_tag_type, s_value):
 	if s_value != "":
+		s_tag_type = s_tag_type.lower()
+		if(isinstance(s_value, basestring)):
+			s_value = s_value.lower()
+			
 		#db_cursor.execute('''INSERT INTO tags (file_id, type, value) VALUES (?,?,?)''', (s_file_id, s_tag_type, s_value,))
 		item = collection_files.find_one({'file_id': s_file_id});
 		if item != None:

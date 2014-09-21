@@ -47,6 +47,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+CORS_ORIGIN_WHITELIST = (
+    'mdaclient'
+)
+
 ROOT_URLCONF = 'media_dump.urls'
 
 WSGI_APPLICATION = 'media_dump.wsgi.application'
