@@ -120,12 +120,12 @@ def search(request):
 	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
 	l_distinct = cursor.distinct("tags")
 
-	l_filter_distinct = {}
+	l_filter_distinct = []
 	c_distinct = 0
 
 	for c_index, tag in enumerate(l_distinct):
 		if tag["type"] == "filter.value":
-			l_filter_distinct.update({ c_distinct: tag["value"]})
+			l_filter_distinct.append({ "term": tag["value"]})
 			c_distinct += 1
 
 	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
