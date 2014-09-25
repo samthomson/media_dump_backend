@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from django.http import HttpResponse
 import math
 import time
+import re
 
 
 def index(request):
@@ -33,6 +34,33 @@ def test(request):
 
 	return HttpResponse(s_out)
 
+def suggest(request):
+	s_query = ""
+
+	if request.method == 'GET' and 'query' in request.GET:
+		s_query = request.GET['query']
+
+	mongo_client = MongoClient()
+	# get mongo database
+	mongo_db = mongo_client.media_dump
+
+	json_response_data = {}
+
+	cursor = mongo_db.media_dump.find({"tags.value":{'$regex':'^sc'}})
+
+	
+	for r in cursor:
+		#json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon})
+		json_response_data['files'].append({"id": r['file_id']})
+
+
+	s_response = json.dumps(json_response_data)
+
+	http_response = HttpResponse(s_response, content_type="application/json")
+	http_response['Access-Control-Allow-Origin'] = '*'
+	return http_response
+
+
 def search(request):
 	time_start = time.time()
 
@@ -51,7 +79,7 @@ def search(request):
 		else:
 			i_page = 1
 
-		
+	
 
 	if request.method == 'GET' and 'operator' in request.GET:
 		if(request.GET['operator'] == "or"):
@@ -61,10 +89,13 @@ def search(request):
 	mongo_client = MongoClient()
 	# get mongo database
 	mongo_db = mongo_client.media_dump
+
+
+	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).limit(10)
 	
 
 	json_response_data = {}
-	json_response_data["files"] = {}
+	json_response_data["files"] = []
 	json_response_data["search_info"] = {"operator": s_operator, "page": i_page, "queries": {}}
 	json_response_data["results_info"] = {}
 
@@ -90,6 +121,7 @@ def search(request):
 			l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
 
 	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page)
+	#cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
 	# {tags: { $elemMatch: { value: s_query } } } 
 	c_files = cursor.count()
 
@@ -103,7 +135,18 @@ def search(request):
 
 	
 	for r in cursor:
-		json_response_data['files'].update({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
+		#json_response_data['files'].append({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
+		f_lat = 0
+		f_lon = 0
+
+		for t in r["tags"]:
+			if t["type"] == "location.latitude":
+				f_lat = t["value"]
+			if t["type"] == "location.longitude":
+				f_lon = t["value"]
+
+
+		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon})
 
 
 	time_end = time.time()

@@ -7,6 +7,9 @@ execfile("get_lat_lon_exif_pil.py")
 import pymongo
 from pymongo import MongoClient
 
+import PIL
+from PIL import Image
+
 
 def process_path(i_id):
 	'''
@@ -64,17 +67,29 @@ def process_thumbs(i_id):
 	s_path = s_path_from_id(i_id)
 	s_source_path = s_seed_dir + s_path_from_id(i_id)
 
+	make_thumb(s_source_path, "../thumb/icon/" + str(i_id) + '.jpg', 32)
+	make_thumb(s_source_path, "../thumb/thumb/" + str(i_id) + '.jpg', 300)
+	make_thumb(s_source_path, "../thumb/lightbox/" + str(i_id) + '.jpg', 1200)
+
+	"""
 	im_temp = Image.open(s_source_path)
 	i_shortest_side_of_temp = min(im_temp.size)
 	# ensure it's a square
 	im_temp = im_temp.crop((0,0,i_shortest_side_of_temp,i_shortest_side_of_temp))
 	# make a thumbnail, as per block size
 	im_temp.thumbnail((125, 125))
-	im_temp.save("../thumb/" + str(i_id) + '.jpg');
+	im_temp.save("../thumb/thumb/" + str(i_id) + '.jpg');
 	print "made thumb for %s @ %s" % (i_id,s_path.replace("/","-"))
+	"""
 
 
-
+def make_thumb(s_in, s_out, i_target_height):
+	targetHeight = i_target_height
+	img = Image.open(s_in)
+	hpercent = (targetHeight/float(img.size[1]))
+	wsize = int((float(img.size[0])*float(hpercent)))
+	img = img.resize((wsize,targetHeight), PIL.Image.ANTIALIAS)
+	img.save(s_out)
 
 
 
