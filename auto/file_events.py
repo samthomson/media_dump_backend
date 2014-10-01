@@ -3,6 +3,8 @@ import sqlite3 as sqlite
 
 from os import listdir
 
+execfile("queue.py")
+
 def get_physical_files(s_base_dir):
 	fileList = []
 
@@ -35,16 +37,15 @@ def process_new_file(s_path):
 	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
 		queue_file(s_file_id, "colour")
 		queue_file(s_file_id, "detection")
-		queue_file(s_file_id, "location")
+		queue_file(s_file_id, "exif_geo")
+		queue_file(s_file_id, "places")
+		queue_file(s_file_id, "elevation")
 		queue_file(s_file_id, "date_taken")
 		queue_file(s_file_id, "make_thumbnails")
 
 	# default queue
 	queue_file(s_file_id, "path")
 
-
-def queue_file(s_file_id, s_queue, s_datetime_from = time.strftime('%Y-%m-%d %H:%M:%S')):
-	db_cursor.execute('''INSERT INTO queue (queue, file_id, datetime_from) VALUES (?,?,?)''', (s_queue, s_file_id, s_datetime_from,))
 
 
 def process_dead_file(s_path):

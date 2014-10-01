@@ -9,6 +9,16 @@ from pymongo import MongoClient
 
 import PIL
 from PIL import Image
+import cStringIO
+import base64
+import json
+import urllib2
+import requests
+
+execfile("queue.py")
+
+from datetime import date, timedelta
+
 
 
 def process_path(i_id):
@@ -50,7 +60,8 @@ def process_path(i_id):
 	for s_word in sl_dir_words:
 		tag(i_id, "directory.fileword", s_word)
 
-def process_location(i_id):
+def process_exif_geo(i_id):
+	# get the lat lon tags and save as tags
 	s_path = s_seed_dir + s_path_from_id(i_id)
 
 	o_image = Image.open(s_path)
@@ -59,37 +70,114 @@ def process_location(i_id):
 	tag(i_id, "location.latitude", lat_lon[0])
 	tag(i_id, "location.longitude", lat_lon[1])
 
+def process_places(i_id):
+	# get the lat lon tags and get place tags from google
+	s_path = s_seed_dir + s_path_from_id(i_id)
+
+	o_image = Image.open(s_path)
+	exif_data = get_exif_data(o_image)
+	lat_lon = get_lat_lon(exif_data)
+
+
+	if(lat_lon[0] != None and lat_lon[1] != None):
+		# get place tags from google
+		s_req_string = "https://maps.googleapis.com/maps/api/geocode/json?latlng="+str(lat_lon[0])+","+str(lat_lon[1])
+
+		r = requests.get(s_req_string)
+		data = r.json()
+
+		if data["status"] == "OK":
+			for item in data["results"][0]["address_components"]:
+				tag(i_id, "location.place", str(item["long_name"]))
+				b_filter_tag = False
+				# types which a filter tag will be added for
+				if "route" in item["types"]:
+					b_filter_tag = True
+				if "country" in item["types"]:
+					b_filter_tag = True
+				if "locality" in item["types"]:
+					b_filter_tag = True
+				if "administrative_area_level_2" in item["types"]:
+					b_filter_tag = True
+				if "postal_code" in item["types"]:
+					b_filter_tag = True
+
+				if b_filter_tag:
+					tag(i_id, "filter.value", str(item["long_name"]))
+
+			tag(i_id, "location.address", str(data['results'][0]['formatted_address']))
+
+		elif data["status"] == "OVER_QUERY_LIMIT":
+			# requeue plus 24 hours
+			queue_file(i_id, "places", str(date.today() + timedelta(days=1)))
+
+def process_elevation(i_id):
+	# get lat lon and query google for elevation
+	s_path = s_seed_dir + s_path_from_id(i_id)
+
+	o_image = Image.open(s_path)
+	exif_data = get_exif_data(o_image)
+	lat_lon = get_lat_lon(exif_data)
+
+	
+	if(lat_lon[0] != None and lat_lon[1] != None):
+		# get place tags from google
+		s_req_string = "http://maps.googleapis.com/maps/api/elevation/json?locations="+str(lat_lon[0])+","+str(lat_lon[1])
+
+		r = requests.get(s_req_string)
+		data = r.json()
+
+		if data["status"] == "OK":
+			tag(i_id, "location.elevation", data['results'][0]['elevation'])
+
+		elif data["status"] == "OVER_QUERY_LIMIT":
+			# requeue plus 24 hours
+			queue_file(i_id, "elevation", str(date.today() + timedelta(days=1)))
 
 
 
 def process_thumbs(i_id):
-	print "make thumb for %s" % i_id
+	print "make thumb for %i" % i_id
 	s_path = s_path_from_id(i_id)
 	s_source_path = s_seed_dir + s_path_from_id(i_id)
 
-	make_thumb(s_source_path, "../thumb/icon/" + str(i_id) + '.jpg', 32)
-	make_thumb(s_source_path, "../thumb/thumb/" + str(i_id) + '.jpg', 300)
+	make_thumb(s_source_path, "db", 32, i_id)
+	make_thumb(s_source_path, "db", 115, i_id)
+	make_thumb(s_source_path, "../thumb/thumb/" + str(i_id) + '.jpg', 210)
 	make_thumb(s_source_path, "../thumb/lightbox/" + str(i_id) + '.jpg', 1200)
 
-	"""
-	im_temp = Image.open(s_source_path)
-	i_shortest_side_of_temp = min(im_temp.size)
-	# ensure it's a square
-	im_temp = im_temp.crop((0,0,i_shortest_side_of_temp,i_shortest_side_of_temp))
-	# make a thumbnail, as per block size
-	im_temp.thumbnail((125, 125))
-	im_temp.save("../thumb/thumb/" + str(i_id) + '.jpg');
-	print "made thumb for %s @ %s" % (i_id,s_path.replace("/","-"))
-	"""
 
-
-def make_thumb(s_in, s_out, i_target_height):
+def make_thumb(s_in, s_out, i_target_height, i_file_id = None):
 	targetHeight = i_target_height
 	img = Image.open(s_in)
 	hpercent = (targetHeight/float(img.size[1]))
 	wsize = int((float(img.size[0])*float(hpercent)))
 	img = img.resize((wsize,targetHeight), PIL.Image.ANTIALIAS)
-	img.save(s_out)
+	if s_out != 'db':
+		# save a physical file
+		img.save(s_out)
+	else:
+		# save a base 64 image to db
+		output = cStringIO.StringIO()
+		s_format = "JPEG"
+
+		img.save(output, s_format)
+		contents = output.getvalue()
+		contents = base64.standard_b64encode(output.getvalue())
+		output.close()
+		s_id = str(i_file_id)
+		s_id = i_file_id
+		
+		# insert or update
+		item = collection_files.find_one({'file_id': s_id});
+
+		if item != None:
+			# item already exists, add tag to it
+			collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_target_height): contents}}})
+		else:
+			# create document with tag as property
+			collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_target_height): contents}]})
+		
 
 
 
@@ -104,31 +192,17 @@ def tag(s_file_id, s_tag_type, s_value):
 			s_value = s_value.lower()
 			
 		#db_cursor.execute('''INSERT INTO tags (file_id, type, value) VALUES (?,?,?)''', (s_file_id, s_tag_type, s_value,))
+		
 		item = collection_files.find_one({'file_id': s_file_id});
 		if item != None:
 			# item already exists, add tag to it
 			#tags = item.tags
 			#tags.add({"type": s_tag_type, "value": s_value})
-			print "update"
-			#collection_files.update({'file_id': s_file_id},{'tags': [{"type": s_tag_type, "value": s_value}]})
-
 			collection_files.update({'file_id' : s_file_id}, { '$push':{'tags': {"type": s_tag_type, "value": s_value}}})
 		else:
 			# create document with tag as property
-			print "insert"
 			collection_files.insert({'file_id': s_file_id, 'tags': [{"type": s_tag_type, "value": s_value}]})
-
-
-
-
-
-
-
-
-
-
-
-
+		
 
 
 
@@ -152,6 +226,7 @@ def dequeue_file(i_id):
 if __name__ == '__main__':
 
 	s_seed_dir = '../media'
+	s_google_api_key = "AIzaSyBm4wSixAQ7c_gbXczbTeIgoOT7l2xPa5E"
 
 	# connect to db
 	db = sqlite.connect('media_dump_db')
@@ -181,15 +256,20 @@ if __name__ == '__main__':
 		if s_queue == "make_thumbnails":
 			process_thumbs(i_file_id)
 
-		if s_queue == "location":
-			process_location(i_file_id)
+		if s_queue == "exif_geo":
+			process_exif_geo(i_file_id)
+
+		if s_queue == "places":
+			process_places(i_file_id)
+
+		if s_queue == "elevation":
+			process_elevation(i_file_id)
 
 
 		# remove it from queue
 		dequeue_file(i_file_id)
-
-		# re-queue for lucene
-		#queue_file(i_file_id, "lucene.index")
+		# queue for one days time
+		#queue_file(i_id, "location", str(date.today() + timedelta(days=1)))
 
 	db.commit()
 	db.close()

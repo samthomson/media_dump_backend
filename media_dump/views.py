@@ -46,7 +46,7 @@ def suggest(request):
 
 	json_response_data = {}
 
-	cursor = mongo_db.media_dump.find({"tags.value":{'$regex':'^sc'}})
+	cursor = mongo_db.media_dump.find({"tags.value":{'$regex':'^sc'}}).limit(10)
 
 	
 	for r in cursor:
@@ -89,9 +89,6 @@ def search(request):
 	mongo_client = MongoClient()
 	# get mongo database
 	mongo_db = mongo_client.media_dump
-
-
-	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).limit(10)
 	
 
 	json_response_data = {}
@@ -146,19 +143,11 @@ def search(request):
 				f_lon = t["value"]
 
 
-		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon})
+		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": r["base_images"][1]})
 
 
 	time_end = time.time()
 	i_search_milliseconds = (time_end - time_start) * 1000
-
-	#l_distinct = cursor.distinct("tags", {'tag.type': 'directory.word'})
-	#l_distinct = cursor.distinct("tags", {"tag.type": "directory.word"})
-	#l_distinct = cursor.aggregate([
-	#	{"$unwind": "tags"},
-	#	{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
-	#	{"$sort": SON([("count", -1), ("_id", -1)])}
-	#	])
 	
 	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
 	l_distinct = cursor.distinct("tags")
