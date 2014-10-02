@@ -79,6 +79,9 @@ def search(request):
 
 	if request.method == 'GET' and 'sort' in request.GET:
 		s_sort = request.GET['sort']
+		
+	if request.method == 'GET' and 'sort_direction' in request.GET:
+		b_sort_direction = request.GET['sort_direction']
 
 	if request.method == 'GET' and 'page' in request.GET:
 		if request.GET['page'].isdigit():
