@@ -7,6 +7,7 @@ from django.http import HttpResponse
 import math
 import time
 import re
+from bson.son import SON
 
 
 def index(request):
@@ -18,18 +19,19 @@ def test(request):
 	s_out = "out<br/><br/>"
 	s_query = "*"
 
-	if request.GET['query'] != None:
-		s_query = request.GET['query']
-
 
 	s_out += "raw query: " + s_query
 
-	#json_query = json.loads(s_query)
+	mongo_client = MongoClient()
+	# get mongo database
+	mongo_db = mongo_client.media_dump
 
-	for s_query in s_query.split(','):
-		s_out += "<br/>"
-		s_out += s_query
 
+	mongo_db.aggregate([
+		{"$unwind": "$tags"},
+		{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+		{"$sort": SON([("count", -1), ("_id", -1)])}
+	])
 
 
 	return HttpResponse(s_out)
@@ -67,11 +69,16 @@ def search(request):
 	# defaults
 	s_query = "*"
 	i_page = 1
+	s_sort = "datetime"
+	b_sort_direction = "asc"
 	s_operator = "and"
 	i_per_page = 100
 
 	if request.method == 'GET' and 'query' in request.GET:
 		s_query = request.GET['query']
+
+	if request.method == 'GET' and 'sort' in request.GET:
+		s_sort = request.GET['sort']
 
 	if request.method == 'GET' and 'page' in request.GET:
 		if request.GET['page'].isdigit():
@@ -79,6 +86,12 @@ def search(request):
 		else:
 			i_page = 1
 
+	b_sort_direction = b_sort_direction.lower()
+
+	if b_sort_direction == "asc":
+		b_sort_direction = pymongo.ASCENDING
+	elif b_sort_direction == "desc":
+		b_sort_direction = pymongo.DESCENDING
 	
 
 	if request.method == 'GET' and 'operator' in request.GET:
@@ -117,7 +130,9 @@ def search(request):
 
 			l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
 
-	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page)
+	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
+
+	distinct_cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
 	#cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
 	# {tags: { $elemMatch: { value: s_query } } } 
 	c_files = cursor.count()
@@ -127,8 +142,6 @@ def search(request):
 	c_available_pages = (c_files / i_per_page)
 	if ((c_files % i_per_page) > 0):
 		c_available_pages += 1
-
-
 
 	
 	for r in cursor:
@@ -150,15 +163,54 @@ def search(request):
 	i_search_milliseconds = (time_end - time_start) * 1000
 	
 	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
-	l_distinct = cursor.distinct("tags")
+	l_distinct = distinct_cursor.distinct("tags")
 
+	
 	l_filter_distinct = []
 	c_distinct = 0
-
+	
 	for c_index, tag in enumerate(l_distinct):
 		if tag["type"] == "filter.value":
-			l_filter_distinct.append({ "term": tag["value"]})
+			l_filter_distinct.append(tag["value"])
 			c_distinct += 1
+
+	l_filter_distinct = sorted(l_filter_distinct)
+	"""
+	'''
+	agg = mongo_db.files.aggregate(
+		[
+		{"$unwind": "$tags"},
+		{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+		{"$sort": SON([("count", -1), ("_id", -1)])}
+		])
+	'''
+
+	'''
+	agg = mongo_db.files.aggregate(
+		[{"$project": {"$tags": { "$cond": [{"type": "filter.value"}]}}},
+		{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+		{"$sort": SON([("count", -1), ("_id", -1)])}
+		])
+	'''
+
+	'''
+	pipeline = [
+	{ "$group": {"tags.type": "filter.value"}},
+	{ "$group": { "tags": 1, "count": { "$sum": 1 } } }
+	];
+
+
+	agg = mongo_db.command("aggregate", "files", pipeline=pipeline);
+	'''
+
+	'''
+	for c_index, tag in enumerate(agg):
+		if tag["type"] == "filter.value":
+			l_filter_distinct.append({ "term": tag["_id"]["value"], "count": tag["count"]})
+			c_distinct += 1
+	'''
+	"""
+
 
 	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
 

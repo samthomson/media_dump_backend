@@ -69,6 +69,11 @@ def process_exif_geo(i_id):
 	lat_lon = get_lat_lon(exif_data)
 	tag(i_id, "location.latitude", lat_lon[0])
 	tag(i_id, "location.longitude", lat_lon[1])
+	tag(i_id, "date.datetime", exif_data["DateTime"])
+
+	set_on_document(i_id, "latitude", lat_lon[0])
+	set_on_document(i_id, "longitude", lat_lon[1])
+	set_on_document(i_id, "datetime", exif_data["DateTime"])
 
 def process_places(i_id):
 	# get the lat lon tags and get place tags from google
@@ -106,6 +111,7 @@ def process_places(i_id):
 					tag(i_id, "filter.value", str(item["long_name"]))
 
 			tag(i_id, "location.address", str(data['results'][0]['formatted_address']))
+			set_on_document(i_id, "address", data['results'][0]['formatted_address'])
 
 		elif data["status"] == "OVER_QUERY_LIMIT":
 			# requeue plus 24 hours
@@ -129,10 +135,24 @@ def process_elevation(i_id):
 
 		if data["status"] == "OK":
 			tag(i_id, "location.elevation", data['results'][0]['elevation'])
+			set_on_document(i_id, "elevation", data['results'][0]['elevation'])
+			# set on document too
 
 		elif data["status"] == "OVER_QUERY_LIMIT":
 			# requeue plus 24 hours
 			queue_file(i_id, "elevation", str(date.today() + timedelta(days=1)))
+
+def process_colour(i_id):
+	# get lat lon and query google for elevation
+	s_path = s_seed_dir + s_path_from_id(i_id)
+
+	o_image = Image.open(s_path)
+
+	# get average colour and store r g b and rgb colour
+	# TODO
+
+	
+	
 
 
 
@@ -203,8 +223,9 @@ def tag(s_file_id, s_tag_type, s_value):
 			# create document with tag as property
 			collection_files.insert({'file_id': s_file_id, 'tags': [{"type": s_tag_type, "value": s_value}]})
 		
-
-
+def set_on_document(i_document_id, s_property_name, s_value, b_unique = True):
+	#
+	collection_files.update({'file_id' : i_document_id}, {'$set': {s_property_name: s_value}}, b_unique)
 
 
 
@@ -265,9 +286,12 @@ if __name__ == '__main__':
 		if s_queue == "elevation":
 			process_elevation(i_file_id)
 
+		if s_queue == "colour":
+			process_colour(i_file_id)
+
 
 		# remove it from queue
-		dequeue_file(i_file_id)
+		#dequeue_file(i_file_id)
 		# queue for one days time
 		#queue_file(i_id, "location", str(date.today() + timedelta(days=1)))
 
