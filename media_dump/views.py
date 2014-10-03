@@ -169,7 +169,19 @@ def search(request):
 			s_type = s_single_query.split('=')[0].lower()
 			s_value = s_single_query.split('=')[1].lower()
 
-			l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
+			if s_type == "map":
+				# hack out lat lon vals and add four queries
+				fl_values = s_value.split('|')
+				if len(fl_values) == 4:
+					l_queries.append({"latitude": {"$gt": float(fl_values[0])}})
+					
+					l_queries.append({"latitude": {"$lt": float(fl_values[1]) }})
+					l_queries.append({"longitude": {"$gt": float(fl_values[2]) }})
+					l_queries.append({"longitude": {"$lt": float(fl_values[3]) }})
+					
+			else:
+				# add default straight equals query
+				l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
 
 	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
 
