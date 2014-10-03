@@ -12,6 +12,7 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^search/', views.search),
+    url(r'^tree/', views.tree),
     url(r'^suggest/', views.suggest),
     url(r'^$', views.index),
     

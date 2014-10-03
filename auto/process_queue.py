@@ -93,7 +93,7 @@ def process_places(i_id):
 
 		if data["status"] == "OK":
 			for item in data["results"][0]["address_components"]:
-				tag(i_id, "location.place", str(item["long_name"]))
+				tag(i_id, "location.place", item["long_name"])
 				b_filter_tag = False
 				# types which a filter tag will be added for
 				if "route" in item["types"]:
@@ -104,13 +104,13 @@ def process_places(i_id):
 					b_filter_tag = True
 				if "administrative_area_level_2" in item["types"]:
 					b_filter_tag = True
-				if "postal_code" in item["types"]:
-					b_filter_tag = True
+				#if "postal_code" in item["types"]:
+				#	b_filter_tag = True
 
 				if b_filter_tag:
-					tag(i_id, "filter.value", str(item["long_name"]))
+					tag(i_id, "filter.value", item["long_name"])
 
-			tag(i_id, "location.address", str(data['results'][0]['formatted_address']))
+			tag(i_id, "location.address", data['results'][0]['formatted_address'])
 			set_on_document(i_id, "address", data['results'][0]['formatted_address'])
 
 		elif data["status"] == "OVER_QUERY_LIMIT":
@@ -291,9 +291,8 @@ if __name__ == '__main__':
 
 
 		# remove it from queue
-		#dequeue_file(i_file_id)
+		dequeue_file(i_file_id)
 		# queue for one days time
-		#queue_file(i_id, "location", str(date.today() + timedelta(days=1)))
-
+		
 	db.commit()
 	db.close()

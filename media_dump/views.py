@@ -63,6 +63,71 @@ def suggest(request):
 	return http_response
 
 
+
+def tree(request):
+	
+	mongo_client = MongoClient()
+	# get mongo database
+	mongo_db = mongo_client.media_dump
+	
+
+	json_response_data = {}
+	json_response_data["tree"] = []
+
+	cursor = mongo_db.files.find( { "$find": {} } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
+
+	distinct_cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
+	#cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
+	# {tags: { $elemMatch: { value: s_query } } } 
+	c_files = cursor.count()
+
+
+	# calculate available pages
+	c_available_pages = (c_files / i_per_page)
+	if ((c_files % i_per_page) > 0):
+		c_available_pages += 1
+
+	
+	for r in cursor:
+		#json_response_data['files'].append({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
+		f_lat = 0
+		f_lon = 0
+
+		for t in r["tags"]:
+			if t["type"] == "location.latitude":
+				f_lat = t["value"]
+			if t["type"] == "location.longitude":
+				f_lon = t["value"]
+
+
+		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": r["base_images"][1]})
+
+
+	time_end = time.time()
+	i_search_milliseconds = (time_end - time_start) * 1000
+	
+	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
+	l_distinct = distinct_cursor.distinct("tags")
+
+	
+	l_filter_distinct = []
+	c_distinct = 0
+	
+	for c_index, tag in enumerate(l_distinct):
+		if tag["type"] == "filter.value":
+			l_filter_distinct.append(tag["value"])
+			c_distinct += 1
+
+	l_filter_distinct = sorted(l_filter_distinct)
+
+	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
+
+	s_response = json.dumps(json_response_data)
+
+	http_response = HttpResponse(s_response, content_type="application/json")
+	http_response['Access-Control-Allow-Origin'] = '*'
+	return http_response
+
 def search(request):
 	time_start = time.time()
 
@@ -151,6 +216,7 @@ def search(request):
 		#json_response_data['files'].append({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
 		f_lat = 0
 		f_lon = 0
+		s_thumb = ""
 
 		for t in r["tags"]:
 			if t["type"] == "location.latitude":
@@ -158,8 +224,12 @@ def search(request):
 			if t["type"] == "location.longitude":
 				f_lon = t["value"]
 
+		try:
+			s_thumb = r["base_images"][1]
+		except:
+			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": r["base_images"][1]})
+		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb})
 
 
 	time_end = time.time()
