@@ -77,6 +77,8 @@ def tree(request):
 
 	distinct_cursor = mongo_db.files.find()
 
+	sl_added = []
+
 
 	
 	for r in distinct_cursor:
@@ -86,10 +88,11 @@ def tree(request):
 		for t in r["tags"]:
 			if t["type"] == "directory.path_folders":
 				s_dir = t["value"]
-				break
+				if s_dir not in sl_added:
+					sl_added.append(s_dir)					
 
-
-		json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": r["base_images"][0]["32"]})
+					json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": r["base_images"][0]["32"]})
+					break
 
 
 	s_response = json.dumps(json_response_data)
