@@ -74,53 +74,23 @@ def tree(request):
 	json_response_data = {}
 	json_response_data["tree"] = []
 
-	cursor = mongo_db.files.find( { "$find": {} } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
 
-	distinct_cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
-	#cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
-	# {tags: { $elemMatch: { value: s_query } } } 
-	c_files = cursor.count()
+	distinct_cursor = mongo_db.files.find()
 
-
-	# calculate available pages
-	c_available_pages = (c_files / i_per_page)
-	if ((c_files % i_per_page) > 0):
-		c_available_pages += 1
 
 	
-	for r in cursor:
-		#json_response_data['files'].append({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
-		f_lat = 0
-		f_lon = 0
+	for r in distinct_cursor:
+
+		s_dir = ""
 
 		for t in r["tags"]:
-			if t["type"] == "location.latitude":
-				f_lat = t["value"]
-			if t["type"] == "location.longitude":
-				f_lon = t["value"]
+			if t["type"] == "directory.path_folders":
+				s_dir = t["value"]
+				break
 
 
-		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": r["base_images"][1]})
+		json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": r["base_images"][0]["32"]})
 
-
-	time_end = time.time()
-	i_search_milliseconds = (time_end - time_start) * 1000
-	
-	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
-	l_distinct = distinct_cursor.distinct("tags")
-
-	
-	l_filter_distinct = []
-	c_distinct = 0
-	
-	for c_index, tag in enumerate(l_distinct):
-		if tag["type"] == "filter.value":
-			l_filter_distinct.append(tag["value"])
-			c_distinct += 1
-
-	l_filter_distinct = sorted(l_filter_distinct)
-
-	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
 
 	s_response = json.dumps(json_response_data)
 

@@ -34,6 +34,7 @@ def process_path(i_id):
 	tag(i_id, "text", "*")
 
 	tag(i_id, "directory.path", s_path)
+	tag(i_id, "directory.path_folders", s_path_folders)
 	tag(i_id, "directory.ext", os.path.splitext(s_path)[1].replace('.',''))
 
 	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
