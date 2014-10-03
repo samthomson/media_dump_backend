@@ -97,8 +97,8 @@ def process_places(i_id):
 				tag(i_id, "location.place", item["long_name"])
 				b_filter_tag = False
 				# types which a filter tag will be added for
-				if "route" in item["types"]:
-					b_filter_tag = True
+				#if "route" in item["types"]:
+				#	b_filter_tag = True
 				if "country" in item["types"]:
 					b_filter_tag = True
 				if "locality" in item["types"]:

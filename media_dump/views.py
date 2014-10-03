@@ -229,8 +229,9 @@ def search(request):
 	
 	for c_index, tag in enumerate(l_distinct):
 		if tag["type"] == "filter.value":
-			l_filter_distinct.append(tag["value"])
-			c_distinct += 1
+			if tag["value"] not in l_filter_distinct:
+				l_filter_distinct.append(tag["value"])
+				c_distinct += 1
 
 	l_filter_distinct = sorted(l_filter_distinct)
 	"""
