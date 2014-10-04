@@ -1,4 +1,4 @@
-import os, sys, time
+import os, sys, time, re
 import sqlite3 as sqlite
 #from easy_thumbnails.files import get_thumbnailer
 
@@ -25,17 +25,24 @@ def process_path(i_id):
 	'''
 	split file path and tag accordingly
 	'''
-	s_path = s_path_from_id(i_id)
+	s_path = s_path_from_id(i_id).lower()
 	s_path_no_ext = os.path.splitext(s_path)[0]
 
 	s_path_folders = s_path_no_ext.rsplit('/',1)[0]
 	s_path_filename = s_path_no_ext.rsplit('/',1)[1]
+	s_extension = os.path.splitext(s_path)[1].replace('.','')
 
 	tag(i_id, "text", "*")
 
 	tag(i_id, "directory.path", s_path)
 	tag(i_id, "directory.path_folders", s_path_folders)
-	tag(i_id, "directory.ext", os.path.splitext(s_path)[1].replace('.',''))
+	tag(i_id, "directory.ext", s_extension)
+
+	if s_extension == "jpg" or s_extension == "jpeg":
+		set_on_document(i_id, "type", "image")
+
+	if s_extension == "avi" or s_extension == "mp4":
+		set_on_document(i_id, "type", "video")
 
 	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
 		tag(i_id, "file.type", "image")
@@ -162,26 +169,52 @@ def process_video(s_id):
 	#
 
 	# mp4
-	#subprocess.call('ffmpeg -i "'+s_path+'" -b:a 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -b:a 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
 
 	# ogv 
-	#subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
 
 	# webm
-	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create two gifs
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 320:240 -t 00:00:30.000 -vf fps=fps=1/5 "../thumb/video/output'+s_id+'%05d.png"', shell=True)
-	subprocess.call('convert -delay 60 "../thumb/video/output'+s_id+'*.png" "../thumb/video/output'+s_id+'.gif"', shell=True)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/10 "../thumb/video/output'+s_id+'_%05d.png"', shell=True)
+	subprocess.call('convert -delay 60 "../thumb/video/output'+s_id+'_*.png" "../thumb/video/output'+s_id+'.gif"', shell=True)
 
-	subprocess.call('rm "../thumb/video/output'+s_id+'*.png"', shell=True)
+	#subprocess.call('rm "../thumb/video/output'+s_id+'_*[0-9].png"', shell=True)
+	purge("../thumb/video", 'output'+s_id+'_[0-9]*.png')
+
+	img = Image.open("../thumb/video/output"+s_id+".gif")
+
+	# save a base 64 image to db
+	output = cStringIO.StringIO()
+	s_format = "GIF"
+
+	img.save(output, s_format)
+	contents = output.getvalue()
+	contents = base64.standard_b64encode(output.getvalue())
+	output.close()
+	os.remove("../thumb/video/output"+s_id+".gif")
+	
+	# insert or update
+	item = collection_files.find_one({'file_id': s_id});
+
+	if item != None:
+		# item already exists, add tag to it
+		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {"210": contents}}})
+	else:
+		# create document with tag as property
+		collection_files.insert({'file_id' : s_id, 'base_images': [{"210": contents}]})
+		
 	
 
 	# create first frame for lightbox load
 	
 	
-
-
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+    	if re.search(pattern, f):
+    		os.remove(os.path.join(dir, f))
 
 def process_thumbs(s_id):
 	s_path = s_path_from_id(s_id)
