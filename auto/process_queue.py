@@ -157,15 +157,14 @@ def process_colour(i_id):
 
 
 
-def process_thumbs(i_id):
-	print "make thumb for %i" % i_id
-	s_path = s_path_from_id(i_id)
-	s_source_path = s_seed_dir + s_path_from_id(i_id)
+def process_thumbs(s_id):
+	s_path = s_path_from_id(s_id)
+	s_source_path = s_seed_dir + s_path_from_id(s_id)
 
-	make_thumb(s_source_path, "db", 32, i_id)
-	make_thumb(s_source_path, "db", 115, i_id)
-	make_thumb(s_source_path, "../thumb/thumb/" + str(i_id) + '.jpg', 210)
-	make_thumb(s_source_path, "../thumb/lightbox/" + str(i_id) + '.jpg', 1200)
+	make_thumb(s_source_path, "db", 32, s_id)
+	make_thumb(s_source_path, "db", 115, s_id)
+	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', 210)
+	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
 
 def make_thumb(s_in, s_out, i_target_height, i_file_id = None):
@@ -231,8 +230,8 @@ def set_on_document(i_document_id, s_property_name, s_value, b_unique = True):
 
 
 
-def s_path_from_id(i_file_id):
-	db_cursor.execute('''SELECT path FROM files WHERE id=?''', (i_file_id,))
+def s_path_from_id(s_file_id):
+	db_cursor.execute('''SELECT path FROM files WHERE id=?''', (s_file_id,))
 	return db_cursor.fetchone()[0]
 
 """

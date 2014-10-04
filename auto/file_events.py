@@ -31,10 +31,10 @@ def process_new_file(s_path):
 	add to db, queue accordingly
 	'''
 	# add to files table
-	db_cursor.execute('''INSERT OR IGNORE INTO files (path) VALUES (?)''', (s_path,))
+	s_file_id = hashlib.sha1(s_path).hexdigest()
+	db_cursor.execute('''INSERT OR IGNORE INTO files (id, path) VALUES (?, ?)''', (s_file_id, s_path,))
 
 	# queue
-	s_file_id = db_cursor.lastrowid
 
 	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
 		queue_file(s_file_id, "colour")
