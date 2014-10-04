@@ -214,7 +214,7 @@ def search(request):
 		except:
 			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb})
+		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"]})
 
 
 	time_end = time.time()

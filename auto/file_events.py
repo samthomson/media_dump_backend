@@ -36,6 +36,10 @@ def process_new_file(s_path):
 
 	# queue
 
+	# default queue
+	queue_file(s_file_id, "path")
+
+
 	# pictures
 	if(s_path.lower().endswith(('.jpg', '.jpeg'))):
 		queue_file(s_file_id, "colour")
@@ -49,9 +53,7 @@ def process_new_file(s_path):
 	if(s_path.lower().endswith(('.avi', '.mp4'))):
 		queue_file(s_file_id, "video")
 
-	# default queue
-	queue_file(s_file_id, "path")
-
+	
 
 
 def process_dead_file(s_path):

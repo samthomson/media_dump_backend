@@ -169,13 +169,13 @@ def process_video(s_id):
 	#
 
 	# mp4
-	subprocess.call('ffmpeg -i "'+s_path+'" -b:a 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+	#subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
 
 	# ogv 
-	subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	#subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
 
 	# webm
-	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create two gifs
 	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/10 "../thumb/video/output'+s_id+'_%05d.png"', shell=True)
