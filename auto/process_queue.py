@@ -167,7 +167,7 @@ def process_thumbs(s_id):
 	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
 
-def make_thumb(s_in, s_out, i_target_height, i_file_id = None):
+def make_thumb(s_in, s_out, i_target_height, s_file_id = None):
 	targetHeight = i_target_height
 	img = Image.open(s_in)
 	hpercent = (targetHeight/float(img.size[1]))
@@ -185,18 +185,16 @@ def make_thumb(s_in, s_out, i_target_height, i_file_id = None):
 		contents = output.getvalue()
 		contents = base64.standard_b64encode(output.getvalue())
 		output.close()
-		s_id = str(i_file_id)
-		s_id = i_file_id
 		
 		# insert or update
-		item = collection_files.find_one({'file_id': s_id});
+		item = collection_files.find_one({'file_id': s_file_id});
 
 		if item != None:
 			# item already exists, add tag to it
-			collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_target_height): contents}}})
+			collection_files.update({'file_id' : s_file_id}, { '$push':{'base_images': {str(i_target_height): contents}}})
 		else:
 			# create document with tag as property
-			collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_target_height): contents}]})
+			collection_files.insert({'file_id' : s_file_id, 'base_images': [{str(i_target_height): contents}]})
 		
 
 
