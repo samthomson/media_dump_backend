@@ -3,6 +3,8 @@ import sqlite3 as sqlite
 
 from os import listdir
 
+import hashlib
+
 execfile("queue.py")
 
 def get_physical_files(s_base_dir):

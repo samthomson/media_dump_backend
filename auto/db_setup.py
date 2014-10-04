@@ -15,7 +15,7 @@ if __name__ == '__main__':
 	'''
 	cursor.execute('''
 		CREATE TABLE IF NOT EXISTS files(
-		id INTEGER NOT NULL,
+		id VARCHAR(40) NOT NULL,
 		path VARCHAR(64),
 		PRIMARY KEY (id)
 		)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 		CREATE TABLE IF NOT EXISTS queue(
 		id INTEGER NOT NULL,
 		queue VARCHAR(32),
-		file_id INTEGER,
+		file_id VARCHAR(40),
 		datetime_from DATETIME,
 		active INTEGER DEFAULT 0,
 		PRIMARY KEY (id)
@@ -81,13 +81,14 @@ if __name__ == '__main__':
 	''')
 
 
+	"""
 	'''
 	tags
 	'''
 	cursor.execute('''
 		CREATE TABLE IF NOT EXISTS tags(
 		id INTEGER NOT NULL,
-		file_id INTEGER,
+		file_id VARCHAR(40),
 		type VARCHAR(32),
 		value VARCHAR(64),
 		PRIMARY KEY (id)
@@ -105,5 +106,5 @@ if __name__ == '__main__':
 	cursor.execute('''
 		CREATE INDEX IF NOT EXISTS value_index ON tags (value)
 	''')
-
+	"""
 	db.close()
