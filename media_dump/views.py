@@ -214,7 +214,7 @@ def search(request):
 		except:
 			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb})
+		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb})
 
 
 	time_end = time.time()
@@ -234,41 +234,7 @@ def search(request):
 				c_distinct += 1
 
 	l_filter_distinct = sorted(l_filter_distinct)
-	"""
-	'''
-	agg = mongo_db.files.aggregate(
-		[
-		{"$unwind": "$tags"},
-		{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
-		{"$sort": SON([("count", -1), ("_id", -1)])}
-		])
-	'''
-
-	'''
-	agg = mongo_db.files.aggregate(
-		[{"$project": {"$tags": { "$cond": [{"type": "filter.value"}]}}},
-		{"$group": {"_id": "$tags", "count": {"$sum": 1}}},
-		{"$sort": SON([("count", -1), ("_id", -1)])}
-		])
-	'''
-
-	'''
-	pipeline = [
-	{ "$group": {"tags.type": "filter.value"}},
-	{ "$group": { "tags": 1, "count": { "$sum": 1 } } }
-	];
-
-
-	agg = mongo_db.command("aggregate", "files", pipeline=pipeline);
-	'''
-
-	'''
-	for c_index, tag in enumerate(agg):
-		if tag["type"] == "filter.value":
-			l_filter_distinct.append({ "term": tag["_id"]["value"], "count": tag["count"]})
-			c_distinct += 1
-	'''
-	"""
+	
 
 
 	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
