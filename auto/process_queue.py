@@ -18,7 +18,7 @@ import requests
 execfile("queue.py")
 
 from datetime import date, timedelta
-
+import subprocess
 
 
 def process_path(i_id):
@@ -152,6 +152,32 @@ def process_colour(i_id):
 	# get average colour and store r g b and rgb colour
 	# TODO
 
+
+def process_video(s_id):
+	# get lat lon and query google for elevation
+	s_path = s_seed_dir + s_path_from_id(s_id)
+
+	#
+	# convert to relevant formats
+	#
+
+	# mp4
+	#subprocess.call('ffmpeg -i "'+s_path+'" -b:a 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+
+	# ogv 
+	#subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+
+	# webm
+	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+
+	# create two gifs
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 320:240 -t 00:00:30.000 -vf fps=fps=1/5 "../thumb/video/output'+s_id+'%05d.png"', shell=True)
+	subprocess.call('convert -delay 60 "../thumb/video/output'+s_id+'*.png" "../thumb/video/output'+s_id+'.gif"', shell=True)
+
+	subprocess.call('rm "../thumb/video/output'+s_id+'*.png"', shell=True)
+	
+
+	# create first frame for lightbox load
 	
 	
 
@@ -163,7 +189,7 @@ def process_thumbs(s_id):
 
 	make_thumb(s_source_path, "db", 32, s_id)
 	make_thumb(s_source_path, "db", 115, s_id)
-	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', 210)
+	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_thumb_height)
 	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
 
@@ -246,6 +272,7 @@ if __name__ == '__main__':
 
 	s_seed_dir = '../media'
 	s_google_api_key = "AIzaSyBm4wSixAQ7c_gbXczbTeIgoOT7l2xPa5E"
+	i_thumb_height = 210
 
 	# connect to db
 	db = sqlite.connect('media_dump_db')
@@ -287,10 +314,12 @@ if __name__ == '__main__':
 		if s_queue == "colour":
 			process_colour(i_file_id)
 
+		if s_queue == "video":
+			process_video(i_file_id)
+
 
 		# remove it from queue
-		dequeue_file(i_file_id)
-		# queue for one days time
+		###dequeue_file(i_file_id)
 		
 	db.commit()
 	db.close()

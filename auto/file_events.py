@@ -36,14 +36,18 @@ def process_new_file(s_path):
 
 	# queue
 
-	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
+	# pictures
+	if(s_path.lower().endswith(('.jpg', '.jpeg'))):
 		queue_file(s_file_id, "colour")
-		queue_file(s_file_id, "detection")
 		queue_file(s_file_id, "exif_geo")
 		queue_file(s_file_id, "places")
 		queue_file(s_file_id, "elevation")
 		queue_file(s_file_id, "date_taken")
 		queue_file(s_file_id, "make_thumbnails")
+
+	# videos
+	if(s_path.lower().endswith(('.avi', '.mp4'))):
+		queue_file(s_file_id, "video")
 
 	# default queue
 	queue_file(s_file_id, "path")

@@ -80,31 +80,4 @@ if __name__ == '__main__':
 		CREATE INDEX IF NOT EXISTS active_index ON queue (active)
 	''')
 
-
-	"""
-	'''
-	tags
-	'''
-	cursor.execute('''
-		CREATE TABLE IF NOT EXISTS tags(
-		id INTEGER NOT NULL,
-		file_id VARCHAR(40),
-		type VARCHAR(32),
-		value VARCHAR(64),
-		PRIMARY KEY (id)
-		)
-		''')
-	cursor.execute('''
-		CREATE INDEX IF NOT EXISTS id_index ON tags (id)
-	''')
-	cursor.execute('''
-		CREATE INDEX IF NOT EXISTS file_id_index ON tags (file_id)
-	''')
-	cursor.execute('''
-		CREATE INDEX IF NOT EXISTS type_index ON tags (type)
-	''')
-	cursor.execute('''
-		CREATE INDEX IF NOT EXISTS value_index ON tags (value)
-	''')
-	"""
 	db.close()
