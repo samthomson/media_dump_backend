@@ -89,9 +89,15 @@ def tree(request):
 			if t["type"] == "directory.path_folders":
 				s_dir = t["value"]
 				if s_dir not in sl_added:
-					sl_added.append(s_dir)					
+					sl_added.append(s_dir)	
+					s_thumb = ""
 
-					json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": r["base_images"][0]["32"]})
+					try:
+						s_thumb = r["base_images"][0]["32"]
+					except:
+						pass			
+
+					json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": s_thumb})
 					break
 
 

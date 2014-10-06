@@ -353,7 +353,7 @@ if __name__ == '__main__':
 
 
 		# remove it from queue
-		###dequeue_file(i_file_id)
+		dequeue_file(i_file_id)
 		
 	db.commit()
 	db.close()
