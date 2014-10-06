@@ -178,23 +178,30 @@ def process_video(s_id):
 	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create two gifs
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/10 "../thumb/video/output'+s_id+'_%05d.png"', shell=True)
-	subprocess.call('convert -delay 60 "../thumb/video/output'+s_id+'_*.png" "../thumb/video/output'+s_id+'.gif"', shell=True)
+	#subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/10 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	#subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/output'+s_id+'_[0-9]*.jpeg" "../thumb/video/output'+s_id+'.gif"', shell=True)
 
 	#subprocess.call('rm "../thumb/video/output'+s_id+'_*[0-9].png"', shell=True)
-	purge("../thumb/video", 'output'+s_id+'_[0-9]*.png')
+	#purge("../thumb/video", 'output'+s_id+'_[0-9]*.png')
 
 	img = Image.open("../thumb/video/output"+s_id+".gif")
 
 	# save a base 64 image to db
 	output = cStringIO.StringIO()
-	s_format = "GIF"
+	s_format = "gif"
 
 	img.save(output, s_format)
 	contents = output.getvalue()
 	contents = base64.standard_b64encode(output.getvalue())
 	output.close()
-	os.remove("../thumb/video/output"+s_id+".gif")
+
+
+	contents = base64.encodestring(open("../thumb/video/output"+s_id+".gif","rb").read())
+
+
+
+
+	#os.remove("../thumb/video/output"+s_id+".gif")
 	
 	# insert or update
 	item = collection_files.find_one({'file_id': s_id});
