@@ -300,7 +300,7 @@ def queue_file(s_file_id, s_queue, s_datetime_from = time.strftime('%Y-%m-%d %H:
 
 def dequeue_file(i_id):
 	#print "dequeue, off for now"
-	db_cursor.execute('''DELETE FROM queue WHERE file_id=?''', (i_id,))
+	db_cursor.execute('''DELETE FROM queue WHERE id=?''', (i_id,))
 
 if __name__ == '__main__':
 
@@ -353,7 +353,7 @@ if __name__ == '__main__':
 
 
 		# remove it from queue
-		dequeue_file(i_file_id)
+		dequeue_file(i_id)
 		
 	db.commit()
 	db.close()
