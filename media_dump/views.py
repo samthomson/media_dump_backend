@@ -210,7 +210,7 @@ def search(request):
 				f_lon = t["value"]
 
 		try:
-			s_thumb = r["base_images"][0]
+			s_thumb = r["base_images"][1]
 		except:
 			pass
 

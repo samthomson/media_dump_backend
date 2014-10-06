@@ -169,39 +169,33 @@ def process_video(s_id):
 	#
 
 	# mp4
-	#subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
 
 	# ogv 
-	#subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
 
 	# webm
-	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
-	# create two gifs
-	#subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/10 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
-	#subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/output'+s_id+'_[0-9]*.jpeg" "../thumb/video/output'+s_id+'.gif"', shell=True)
+	# create stills for gif and thumb
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	
+	# create tiny icon
+	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
 
-	#subprocess.call('rm "../thumb/video/output'+s_id+'_*[0-9].png"', shell=True)
-	#purge("../thumb/video", 'output'+s_id+'_[0-9]*.png')
+	s_gif_path = "../thumb/video/output"+s_id+".gif"
+	
+	subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/output'+s_id+'_[0-9]*.jpeg" '+s_gif_path, shell=True)
 
-	img = Image.open("../thumb/video/output"+s_id+".gif")
+	purge("../thumb/video", 'output'+s_id+'_[0-9]*.jpeg')
 
 	# save a base 64 image to db
-	output = cStringIO.StringIO()
-	s_format = "gif"
-
-	img.save(output, s_format)
-	contents = output.getvalue()
-	contents = base64.standard_b64encode(output.getvalue())
-	output.close()
-
-
-	contents = base64.encodestring(open("../thumb/video/output"+s_id+".gif","rb").read())
+	contents = base64.encodestring(open(s_gif_path,"rb").read())
 
 
 
 
-	#os.remove("../thumb/video/output"+s_id+".gif")
+	os.remove(s_gif_path)
 	
 	# insert or update
 	item = collection_files.find_one({'file_id': s_id});
