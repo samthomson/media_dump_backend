@@ -298,6 +298,10 @@ these should be shared
 def queue_file(s_file_id, s_queue, s_datetime_from = time.strftime('%Y-%m-%d %H:%M:%S')):
 	db_cursor.execute('''INSERT INTO queue (queue, file_id, datetime_from) VALUES (?,?,?)''', (s_queue, s_file_id, s_datetime_from,))
 
+def start_processing(i_item_id):
+	# set active value on item in db, so it doesn't get pulled out by anyone else
+	db_cursor.execute('''UPDATE queue SET active=1 WHERE id=?''', (i_item_id,))
+
 def dequeue_file(i_id):
 	#print "dequeue, off for now"
 	db_cursor.execute('''DELETE FROM queue WHERE id=?''', (i_id,))
@@ -331,24 +335,31 @@ if __name__ == '__main__':
 
 		# pass it to relevant processor function
 		if s_queue == "path":
+			start_processing(i_id)
 			process_path(i_file_id)
 
 		if s_queue == "make_thumbnails":
+			start_processing(i_id)
 			process_thumbs(i_file_id)
 
 		if s_queue == "exif_geo":
+			start_processing(i_id)
 			process_exif_geo(i_file_id)
 
 		if s_queue == "places":
+			start_processing(i_id)
 			process_places(i_file_id)
 
 		if s_queue == "elevation":
+			start_processing(i_id)
 			process_elevation(i_file_id)
 
 		if s_queue == "colour":
+			start_processing(i_id)
 			process_colour(i_file_id)
 
 		if s_queue == "video":
+			start_processing(i_id)
 			process_video(i_file_id)
 
 
