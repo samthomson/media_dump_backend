@@ -91,13 +91,14 @@ def tree(request):
 				if s_dir not in sl_added:
 					sl_added.append(s_dir)	
 					s_thumb = ""
+					s_dir_text = s_dir.split('/')[-1]
 
 					try:
-						s_thumb = r["base_images"][0]["32"]
+						s_thumb = r["base_images"][1]["115"]
 					except:
 						pass			
 
-					json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "data_thumb": s_thumb})
+					json_response_data['tree'].append({"id": r['file_id'], "dir": s_dir, "dir_text": s_dir_text, "data_thumb": s_thumb})
 					break
 
 
