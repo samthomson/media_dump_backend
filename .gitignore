@@ -1,3 +1,5 @@
 media/
 thumb/
 *.pyc
+auto/media_dump_db
+auto/media_dump_db-journal

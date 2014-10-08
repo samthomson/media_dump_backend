@@ -28,34 +28,57 @@ def process_faces(i_id):
 	s_path = s_seed_dir + s_path_from_id(i_id)
 
 	imagePath = s_path
-	cascPath = "haar/haarcascade_frontalface_default.xml"
 
 	b_has_face = False
 	b_has_body = False
-
-	# Create the haar cascade
-	faceCascade = cv2.CascadeClassifier(cascPath)
 
 	# Read the image
 	image = cv2.imread(imagePath)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-	# Detect faces in the image
-	faces = faceCascade.detectMultiScale(
-		gray,
-		scaleFactor=1.4,
-		minNeighbors=5,
-		minSize=(100, 100)
-	)
+	#
+	# look for faces
+	#
+	for haar in glob.glob("haar/face/*.*"):
+		# Create the haar cascade
+		faceCascade = cv2.CascadeClassifier(haar)
 
-	print "Found {0} faces!".format(len(faces))
+		# Detect faces in the image
+		faces = faceCascade.detectMultiScale(
+			gray,
+			scaleFactor=1.4,
+			minNeighbors=5,
+			minSize=(100, 100)
+		)
 
-	# Draw a rectangle around the faces
-	for (x, y, w, h) in faces:
-		cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+		if len(faces) > 0:
+			if b_has_face == False:
+				b_has_face = True
 
-	if len(faces) > 0:
-		cv2.imwrite("faces/"+str(len(faces))+"____face_"+str(i_id)+".jpg", image);
+	#
+	# look for bodies
+	#
+	for haar in glob.glob("haar/faces/*.*"):	
+		# Create the haar cascade
+		faceCascade = cv2.CascadeClassifier(haar)
+
+		# Detect faces in the image
+		faces = faceCascade.detectMultiScale(
+			gray,
+			scaleFactor=1.4,
+			minNeighbors=5,
+			minSize=(100, 100)
+		)
+
+		if len(faces) > 0:
+			if b_has_body == False:
+				b_has_body = True
+
+	set_on_document(i_id, "face", b_has_face)
+	set_on_document(i_id, "body", b_has_body)
+
+	tag(i_id, "face", b_has_face)
+	tag(i_id, "body", b_has_body)
 
 
 def process_path(i_id):
@@ -381,6 +404,8 @@ if __name__ == '__main__':
 		s_queue = o_item[1]
 		i_file_id = o_item[2]
 
+		print "item id: %s, file id: %s" % (i_id, i_file_id)
+
 		# pass it to relevant processor function
 		if s_queue == "path":
 			start_processing(i_id)
@@ -411,14 +436,13 @@ if __name__ == '__main__':
 			process_video(i_file_id)
 
 		if s_queue == "detect_faces":
-			#start_processing(i_id)
+			start_processing(i_id)
 			process_faces(i_file_id)
 
 
 
-
 		# remove it from queue
-		####dequeue_file(i_id)
+		dequeue_file(i_id)
 		
 	db.commit()
 	db.close()
