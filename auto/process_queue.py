@@ -150,14 +150,26 @@ def process_elevation(i_id):
 			# requeue plus 24 hours
 			queue_file(i_id, "elevation", str(date.today() + timedelta(days=1)))
 
+def get_colors(infile, outfile = '', numcolors=1, swatchsize=20, resize=150):
+ 
+	image = Image.open(infile)
+	image = image.resize((resize, resize))
+	result = image.convert('P', palette=Image.ADAPTIVE, colors=numcolors)
+	result.putalpha(0)
+	colors = result.getcolors(resize*resize)
+
+	return colors[0][1]
+
 def process_colour(i_id):
 	# get lat lon and query google for elevation
 	s_path = s_seed_dir + s_path_from_id(i_id)
 
-	o_image = Image.open(s_path)
+	t_colours = get_colors(s_path)
 
 	# get average colour and store r g b and rgb colour
-	# TODO
+	set_on_document(i_id, "red", t_colours[0])
+	set_on_document(i_id, "green", t_colours[1])
+	set_on_document(i_id, "blue", t_colours[2])
 
 
 def process_video(s_id):
@@ -191,8 +203,6 @@ def process_video(s_id):
 
 	# save a base 64 image to db
 	contents = base64.encodestring(open(s_gif_path,"rb").read())
-
-
 
 
 	os.remove(s_gif_path)
