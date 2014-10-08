@@ -20,6 +20,43 @@ execfile("queue.py")
 from datetime import date, timedelta
 import subprocess
 
+import cv2
+import glob
+
+
+def process_faces(i_id):
+	s_path = s_seed_dir + s_path_from_id(i_id)
+
+	imagePath = s_path
+	cascPath = "haar/haarcascade_frontalface_default.xml"
+
+	b_has_face = False
+	b_has_body = False
+
+	# Create the haar cascade
+	faceCascade = cv2.CascadeClassifier(cascPath)
+
+	# Read the image
+	image = cv2.imread(imagePath)
+	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+	# Detect faces in the image
+	faces = faceCascade.detectMultiScale(
+		gray,
+		scaleFactor=1.4,
+		minNeighbors=5,
+		minSize=(100, 100)
+	)
+
+	print "Found {0} faces!".format(len(faces))
+
+	# Draw a rectangle around the faces
+	for (x, y, w, h) in faces:
+		cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+	if len(faces) > 0:
+		cv2.imwrite("faces/"+str(len(faces))+"____face_"+str(i_id)+".jpg", image);
+
 
 def process_path(i_id):
 	'''
@@ -67,6 +104,7 @@ def process_path(i_id):
 	sl_dir_words = s_path_filename.split(' ')
 	for s_word in sl_dir_words:
 		tag(i_id, "directory.fileword", s_word)
+
 
 def process_exif_geo(i_id):
 	# get the lat lon tags and save as tags
@@ -372,9 +410,15 @@ if __name__ == '__main__':
 			start_processing(i_id)
 			process_video(i_file_id)
 
+		if s_queue == "detect_faces":
+			#start_processing(i_id)
+			process_faces(i_file_id)
+
+
+
 
 		# remove it from queue
-		dequeue_file(i_id)
+		####dequeue_file(i_id)
 		
 	db.commit()
 	db.close()

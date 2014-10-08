@@ -48,6 +48,7 @@ def process_new_file(s_path):
 		queue_file(s_file_id, "elevation")
 		queue_file(s_file_id, "date_taken")
 		queue_file(s_file_id, "make_thumbnails")
+		queue_file(s_file_id, "detect_faces")
 
 	# videos
 	if(s_path.lower().endswith(('.avi', '.mp4'))):
