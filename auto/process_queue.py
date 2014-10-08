@@ -178,7 +178,7 @@ def process_video(s_id):
 	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create stills for gif and thumb
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 210:140 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
@@ -202,10 +202,10 @@ def process_video(s_id):
 
 	if item != None:
 		# item already exists, add tag to it
-		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {"210": contents}}})
+		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {"115": contents}}})
 	else:
 		# create document with tag as property
-		collection_files.insert({'file_id' : s_id, 'base_images': [{"210": contents}]})
+		collection_files.insert({'file_id' : s_id, 'base_images': [{"115": contents}]})
 		
 	
 
