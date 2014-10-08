@@ -187,7 +187,7 @@ def search(request):
 					l_queries.append({"longitude": {"$lt": float(fl_values[3]) }})
 					
 			else:
-				if s_type == "face":
+				if s_type == "face" or s_type == "body":
 					s_value = s_value.lower() in ("yes", "true", "t", "1")
 				# add default straight equals query
 				l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
