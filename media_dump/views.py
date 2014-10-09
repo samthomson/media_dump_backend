@@ -118,6 +118,7 @@ def search(request):
 	b_sort_direction = "asc"
 	s_operator = "and"
 	i_per_page = 100
+	i_filters_limit = 15
 
 	if request.method == 'GET' and 'query' in request.GET:
 		s_query = request.GET['query']
@@ -229,20 +230,22 @@ def search(request):
 	time_end = time.time()
 	i_search_milliseconds = (time_end - time_start) * 1000
 	
-	#l_distinct = cursor.distinct("tags", "{'type': 'directory.word'}")
-	l_distinct = distinct_cursor.distinct("tags")
+	l_distinct = cursor.distinct("tags")
+	
+	t_filters = []
+	t_distinct = []
+	for r in distinct_cursor:
+		for tag in r["tags"]:
+			if tag["type"] == "filter.value":
+				t_filters.append(tag["value"])
+
+
+	for s_distinct in set(t_filters):
+		t_distinct.append((s_distinct, t_filters.count(s_distinct)))
 
 	
-	l_filter_distinct = []
-	c_distinct = 0
-	
-	for c_index, tag in enumerate(l_distinct):
-		if tag["type"] == "filter.value":
-			if tag["value"] not in l_filter_distinct:
-				l_filter_distinct.append(tag["value"])
-				c_distinct += 1
-
-	l_filter_distinct = sorted(l_filter_distinct)
+	l_filter_distinct = sorted(t_distinct, key=lambda term: term[1], reverse=True)
+	del l_filter_distinct[i_filters_limit:]
 	
 
 

@@ -86,6 +86,7 @@ def process_path(i_id):
 	split file path and tag accordingly
 	'''
 	s_path = s_path_from_id(i_id).lower()
+	print "process path: %s" % s_path
 	s_path_no_ext = os.path.splitext(s_path)[0]
 
 	s_path_folders = s_path_no_ext.rsplit('/',1)[0]
