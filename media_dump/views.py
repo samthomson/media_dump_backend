@@ -8,7 +8,7 @@ import math
 import time
 import re
 from bson.son import SON
-
+from random import shuffle
 
 def index(request):
 
@@ -113,12 +113,13 @@ def search(request):
 
 	# defaults
 	s_query = "*"
+	s_search_mode = "search"
 	i_page = 1
 	s_sort = "datetime"
 	b_sort_direction = "asc"
 	s_operator = "and"
 	i_per_page = 100
-	i_filters_limit = 15
+	i_filters_limit = 20
 
 	if request.method == 'GET' and 'query' in request.GET:
 		s_query = request.GET['query']
@@ -146,6 +147,9 @@ def search(request):
 	if request.method == 'GET' and 'operator' in request.GET:
 		if(request.GET['operator'] == "or"):
 			s_operator = "or"
+	if request.method == 'GET' and 'search_mode' in request.GET:
+		if(request.GET['search_mode'] == "map"):
+			s_search_mode = "map"
 
 
 	mongo_client = MongoClient()
@@ -193,7 +197,11 @@ def search(request):
 				# add default straight equals query
 				l_queries.append({ "$and" : [ { "tags.type": s_type }, { "tags.value": s_value } ] })
 
-	cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
+	if s_search_mode == "search":
+		cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
+	else:
+		# shuffle and limit manually
+		cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort("file_id", b_sort_direction)
 
 	distinct_cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
 	#cursor = mongo_db.files.find( { "$"+s_operator: l_queries } )
@@ -208,7 +216,6 @@ def search(request):
 
 	
 	for r in cursor:
-		#json_response_data['files'].append({r['file_id']:{"id": r['file_id'], "tags": r["tags"]}})
 		f_lat = 0
 		f_lon = 0
 		s_thumb = ""
@@ -226,11 +233,6 @@ def search(request):
 
 		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"]})
 
-
-	time_end = time.time()
-	i_search_milliseconds = (time_end - time_start) * 1000
-	
-	l_distinct = cursor.distinct("tags")
 	
 	t_filters = []
 	t_distinct = []
@@ -243,12 +245,21 @@ def search(request):
 	for s_distinct in set(t_filters):
 		t_distinct.append((s_distinct, t_filters.count(s_distinct)))
 
-	
+	# format filters in descending order of most occurences	
 	l_filter_distinct = sorted(t_distinct, key=lambda term: term[1], reverse=True)
 	del l_filter_distinct[i_filters_limit:]
 	
 
 
+	#
+	# end search time
+	#
+	time_end = time.time()
+	i_search_milliseconds = (time_end - time_start) * 1000
+
+	#
+	# build final response
+	#
 	json_response_data["results_info"] = {"count": c_files, "available_pages": c_available_pages, "speed": i_search_milliseconds, "distinct": l_filter_distinct}
 
 	s_response = json.dumps(json_response_data)
