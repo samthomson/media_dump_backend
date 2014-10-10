@@ -243,16 +243,16 @@ def process_video(s_id):
 	#
 
 	# mp4
-	subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+	#subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
 
 	# ogv 
-	subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	print subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
 
 	# webm
-	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	#subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create stills for gif and thumb
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	#subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
@@ -377,6 +377,7 @@ def start_processing(i_item_id):
 def dequeue_file(i_id):
 	#print "dequeue, off for now"
 	db_cursor.execute('''DELETE FROM queue WHERE id=?''', (i_id,))
+	db.commit()
 
 if __name__ == '__main__':
 
@@ -407,40 +408,44 @@ if __name__ == '__main__':
 
 		print "item id: %s, file id: %s" % (i_id, i_file_id)
 
-		# pass it to relevant processor function
-		if s_queue == "path":
-			start_processing(i_id)
-			process_path(i_file_id)
+		try:
 
-		if s_queue == "make_thumbnails":
-			start_processing(i_id)
-			process_thumbs(i_file_id)
+			# pass it to relevant processor function
+			if s_queue == "path":
+				start_processing(i_id)
+				process_path(i_file_id)
 
-		if s_queue == "exif_geo":
-			start_processing(i_id)
-			process_exif_geo(i_file_id)
+			if s_queue == "make_thumbnails":
+				start_processing(i_id)
+				process_thumbs(i_file_id)
 
-		if s_queue == "places":
-			start_processing(i_id)
-			process_places(i_file_id)
+			if s_queue == "exif_geo":
+				start_processing(i_id)
+				process_exif_geo(i_file_id)
 
-		if s_queue == "elevation":
-			start_processing(i_id)
-			process_elevation(i_file_id)
+			if s_queue == "places":
+				start_processing(i_id)
+				process_places(i_file_id)
 
-		if s_queue == "colour":
-			start_processing(i_id)
-			process_colour(i_file_id)
+			if s_queue == "elevation":
+				start_processing(i_id)
+				process_elevation(i_file_id)
 
-		if s_queue == "video":
-			start_processing(i_id)
-			process_video(i_file_id)
+			if s_queue == "colour":
+				start_processing(i_id)
+				process_colour(i_file_id)
 
-		if s_queue == "detect_faces":
-			start_processing(i_id)
-			process_faces(i_file_id)
+			if s_queue == "video":
+				start_processing(i_id)
+				process_video(i_file_id)
 
+			if s_queue == "detect_faces":
+				start_processing(i_id)
+				process_faces(i_file_id)
 
+		except:
+			set_on_document(i_file_id, "queue processing error", s_queue)
+			set_on_document(i_file_id, "error", True)
 
 		# remove it from queue
 		dequeue_file(i_id)
