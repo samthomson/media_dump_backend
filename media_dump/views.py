@@ -168,6 +168,9 @@ def search(request):
 	c_available_pages = 0
 	i_search_milliseconds = 0
 
+	# default queries
+	l_queries.append({"error": {"$exists": False}})
+
 
 	for c_index, s_single_query in enumerate(s_query.split(',')):
 		json_response_data["search_info"]["queries"].update({c_index: s_single_query.lower()})
