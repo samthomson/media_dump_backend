@@ -75,7 +75,7 @@ def tree(request):
 	json_response_data["tree"] = []
 
 
-	distinct_cursor = mongo_db.files.find()
+	distinct_cursor = mongo_db.files.find({"error": {"$exists": False}})
 
 	sl_added = []
 
