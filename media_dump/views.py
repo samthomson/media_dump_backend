@@ -47,22 +47,48 @@ def suggest(request):
 	mongo_db = mongo_client.media_dump
 
 	json_response_data = {}
+	json_response_data["files"] = []
 
-	cursor = mongo_db.media_dump.find({"tags.value":{'$regex':'^sc'}}).limit(10)
+	regx = re.compile("^"+s_query, re.IGNORECASE)
 
+	#cursor = mongo_db.files.find({"tags.value": regx}, {"tags.$": 1}).distinct("tag.value")
+
+	cursor = mongo_db.files.find({"tags.value": regx})
+
+	"""
+	cursor = mongo_db({
+	"mapreduce" : "files",
+	"map" : function() {
+	for (var key in this) { emit(key, null); }
+	},
+	"reduce" : function(key, stuff) { return null; }, 
+	"out": "my_collection" + "_keys"
+	})
+
+	
+	mr = db.runCommand({
+	"mapreduce" : "my_collection",
+	"map" : function() {
+	for (var key in this) { emit(key, null); }
+	},
+	"reduce" : function(key, stuff) { return null; }, 
+	"out": "my_collection" + "_keys"
+	})
+	"""
 	
 	for r in cursor:
 		#json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon})
-		json_response_data['files'].append({"id": r['file_id']})
+		#for tag in r["tags"]:
+		if r["type"] == "location.place":
+			if regx.match(r["value"]):
+				json_response_data['files'].append({"tag": r["value"]})
+	
 
-
-	s_response = json.dumps(json_response_data)
+	s_response = json.dumps(cursor)
 
 	http_response = HttpResponse(s_response, content_type="application/json")
 	http_response['Access-Control-Allow-Origin'] = '*'
 	return http_response
-
-
 
 def tree(request):
 	
@@ -147,8 +173,8 @@ def search(request):
 	if request.method == 'GET' and 'operator' in request.GET:
 		if(request.GET['operator'] == "or"):
 			s_operator = "or"
-	if request.method == 'GET' and 'search_mode' in request.GET:
-		if(request.GET['search_mode'] == "map"):
+	if request.method == 'GET' and 'search_input' in request.GET:
+		if(request.GET['search_input'] == "map"):
 			s_search_mode = "map"
 
 
@@ -202,7 +228,7 @@ def search(request):
 
 	if s_search_mode == "search":
 		cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort(s_sort, b_sort_direction)
-	else:
+	elif s_search_mode == "map":
 		# shuffle and limit manually
 		cursor = mongo_db.files.find( { "$"+s_operator: l_queries } ).skip((i_page-1)*i_per_page).limit(i_per_page).sort("file_id", b_sort_direction)
 

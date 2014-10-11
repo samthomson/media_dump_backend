@@ -37,7 +37,8 @@ def process_new_file(s_path):
 	# queue
 
 	# default queue
-	queue_file(s_file_id, "path")
+	if(s_path.lower().endswith(('.jpg', '.jpeg', '.avi', '.mp4', '.mov'))):
+		queue_file(s_file_id, "path")
 
 
 	# pictures
