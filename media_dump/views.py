@@ -37,6 +37,8 @@ def test(request):
 	return HttpResponse(s_out)
 
 def suggest(request):
+	time_start = time.time()
+
 	s_query = ""
 
 	if request.method == 'GET' and 'query' in request.GET:
@@ -48,43 +50,42 @@ def suggest(request):
 
 	json_response_data = {}
 	json_response_data["files"] = []
+	json_response_data["speed"] = 0
 
-	regx = re.compile("^"+s_query, re.IGNORECASE)
+	regx = re.compile("^.*"+s_query+".*$", re.IGNORECASE)
 
-	#cursor = mongo_db.files.find({"tags.value": regx}, {"tags.$": 1}).distinct("tag.value")
+	'''
+	cursor = mongo_db.files.find({"tags.value": regx}).distinct("tag.value")
+
+	for r in cursor:
+		print r
+		#for tag in r["tags"]:
+		if regx.match(r):
+			json_response_data['files'].append(r)
+
+	json_response_data['files'] = cursor
+	'''
 
 	cursor = mongo_db.files.find({"tags.value": regx})
-
-	"""
-	cursor = mongo_db({
-	"mapreduce" : "files",
-	"map" : function() {
-	for (var key in this) { emit(key, null); }
-	},
-	"reduce" : function(key, stuff) { return null; }, 
-	"out": "my_collection" + "_keys"
-	})
-
-	
-	mr = db.runCommand({
-	"mapreduce" : "my_collection",
-	"map" : function() {
-	for (var key in this) { emit(key, null); }
-	},
-	"reduce" : function(key, stuff) { return null; }, 
-	"out": "my_collection" + "_keys"
-	})
-	"""
 	
 	for r in cursor:
-		#json_response_data['files'].append({"id": r['file_id'], "tags": r["tags"], "lat": f_lat, "lon": f_lon})
-		#for tag in r["tags"]:
-		if r["type"] == "location.place":
-			if regx.match(r["value"]):
-				json_response_data['files'].append({"tag": r["value"]})
+		for tag in r["tags"]:
+			if tag["type"] == "filter.value":
+				if regx.match(tag["value"]):
+					if tag["value"] not in json_response_data["files"]:
+						#json_response_data['files'].append({"tag": tag["value"]})
+						json_response_data['files'].append(tag["value"])
+
+
+	del json_response_data['files'][10:]
 	
 
-	s_response = json.dumps(cursor)
+	time_end = time.time()
+	i_search_milliseconds = (time_end - time_start) * 1000
+
+	json_response_data["speed"] = i_search_milliseconds
+
+	s_response = json.dumps(json_response_data)
 
 	http_response = HttpResponse(s_response, content_type="application/json")
 	http_response['Access-Control-Allow-Origin'] = '*'
