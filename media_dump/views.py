@@ -121,7 +121,7 @@ def tree(request):
 					s_dir_text = s_dir.split('/')[-1]
 
 					try:
-						s_thumb = r["base_images"][1]["115"]
+						s_thumb = r["base_images"][1]["220"]
 					except:
 						pass			
 
@@ -224,7 +224,7 @@ def search(request):
 				#l_queries.append({"tags.value": s_single_query.lower()})
 				l_queries.append({"tags.value": "*"})
 				s_sort = "file_id"
-				
+
 			else:
 				if s_type == "face" or s_type == "body":
 					s_value = s_value.lower() in ("yes", "true", "t", "1")
@@ -265,7 +265,7 @@ def search(request):
 		except:
 			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"], "height": 115})
+		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"], "height": 220})
 
 	
 	t_filters = []
