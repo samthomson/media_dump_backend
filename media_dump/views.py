@@ -220,7 +220,11 @@ def search(request):
 					l_queries.append({"latitude": {"$lt": float(fl_values[1]) }})
 					l_queries.append({"longitude": {"$gt": float(fl_values[2]) }})
 					l_queries.append({"longitude": {"$lt": float(fl_values[3]) }})
-					
+			elif s_type == "search" and s_value == "shuffle":
+				#l_queries.append({"tags.value": s_single_query.lower()})
+				l_queries.append({"tags.value": "*"})
+				s_sort = "file_id"
+				
 			else:
 				if s_type == "face" or s_type == "body":
 					s_value = s_value.lower() in ("yes", "true", "t", "1")

@@ -20,7 +20,7 @@ execfile("queue.py")
 from datetime import date, timedelta
 import subprocess
 
-import cv2
+#import cv2
 import glob
 
 
