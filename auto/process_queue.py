@@ -14,6 +14,7 @@ import base64
 import json
 import urllib2
 import requests
+import math
 
 execfile("queue.py")
 
@@ -252,7 +253,8 @@ def process_video(s_id):
 	subprocess.call('ffmpeg -i "'+s_path+'" -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create stills for gif and thumb
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	i_gif_width = Math.floor(i_thumb_height * 1.5)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '.str(i_gif_width).':'.str(i_thumb_height).' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
