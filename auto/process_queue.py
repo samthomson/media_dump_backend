@@ -246,13 +246,13 @@ def process_video(s_id):
 	subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
 
 	# ogv 
-	subprocess.call('ffmpeg -i '+s_path+' -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
 
 	# webm
-	subprocess.call('ffmpeg -i '+s_path+' -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create stills for gif and thumb
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i '+s_path+' -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s 173:115 -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
@@ -443,7 +443,8 @@ if __name__ == '__main__':
 				start_processing(i_id)
 				process_faces(i_file_id)
 
-		except:
+		except (RuntimeError, TypeError, NameError):
+			print "error processing queue; runtime error: %s, type error: %s, name error: %s" % (RuntimeError, TypeError, NameError)
 			set_on_document(i_file_id, "queue processing error", s_queue)
 			set_on_document(i_file_id, "error", True)
 
