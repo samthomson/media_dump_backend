@@ -121,7 +121,7 @@ def tree(request):
 					s_dir_text = s_dir.split('/')[-1]
 
 					try:
-						s_thumb = r["base_images"][1]["220"]
+						s_thumb = r["base_images"][1]["180"]
 					except:
 						pass			
 
@@ -268,7 +268,7 @@ def search(request):
 		except:
 			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"], "height": 220})
+		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"], "height": 180})
 
 	
 	t_filters = []

@@ -1,4 +1,4 @@
-import os, sys, time, re
+import os, sys, time, re, traceback
 import sqlite3 as sqlite
 #from easy_thumbnails.files import get_thumbnailer
 
@@ -253,8 +253,10 @@ def process_video(s_id):
 	subprocess.call('ffmpeg -i "'+s_path+'" -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
 
 	# create stills for gif and thumb
-	i_gif_width = Math.floor(i_thumb_height * 1.5)
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+str(i_gif_width)+':'+str(i_thumb_height)+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	i_gif_width = str(int(round(math.floor(i_thumb_height * 1.5))))
+	i_gif_height = str(int(round(i_thumb_height)))
+	print "gif x,y: %s,%s" % (i_gif_width, i_gif_height)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+i_gif_width+':'+i_gif_height+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
@@ -446,7 +448,10 @@ if __name__ == '__main__':
 				process_faces(i_file_id)
 
 		except (RuntimeError, TypeError, NameError):
-			print "error processing queue; runtime error: %s, type error: %s, name error: %s" % (RuntimeError, TypeError, NameError)
+			print "error processing queue:"
+			print '-'*60
+			traceback.print_exc(file=sys.stdout)
+			print '-'*60
 			set_on_document(i_file_id, "queue processing error", s_queue)
 			set_on_document(i_file_id, "error", True)
 
