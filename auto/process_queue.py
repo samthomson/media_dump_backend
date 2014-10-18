@@ -274,10 +274,10 @@ def process_video(s_id):
 
 	if item != None:
 		# item already exists, add tag to it
-		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {"220": contents}}})
+		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_thumb_height): contents}}})
 	else:
 		# create document with tag as property
-		collection_files.insert({'file_id' : s_id, 'base_images': [{"220": contents}]})
+		collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_thumb_height): contents}]})
 		
 	
 
@@ -294,7 +294,7 @@ def process_thumbs(s_id):
 	s_source_path = s_seed_dir + s_path_from_id(s_id)
 
 	make_thumb(s_source_path, "db", 32, s_id)
-	make_thumb(s_source_path, "db", 220, s_id)
+	make_thumb(s_source_path, "db", i_thumb_height, s_id)
 	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_thumb_height)
 	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
@@ -383,7 +383,7 @@ if __name__ == '__main__':
 
 	s_seed_dir = '../media'
 	s_google_api_key = "AIzaSyBm4wSixAQ7c_gbXczbTeIgoOT7l2xPa5E"
-	i_thumb_height = 210
+	i_thumb_height = 180
 
 	# connect to db
 	db = sqlite.connect('media_dump_db')

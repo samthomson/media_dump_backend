@@ -145,7 +145,7 @@ def search(request):
 	s_sort = "datetime"
 	b_sort_direction = "asc"
 	s_operator = "and"
-	i_per_page = 100
+	i_per_page = 50
 	i_filters_limit = 20
 
 	if request.method == 'GET' and 'query' in request.GET:
@@ -163,12 +163,6 @@ def search(request):
 		else:
 			i_page = 1
 
-	b_sort_direction = b_sort_direction.lower()
-
-	if b_sort_direction == "asc":
-		b_sort_direction = pymongo.ASCENDING
-	elif b_sort_direction == "desc":
-		b_sort_direction = pymongo.DESCENDING
 	
 
 	if request.method == 'GET' and 'operator' in request.GET:
@@ -177,6 +171,15 @@ def search(request):
 	if request.method == 'GET' and 'search_input' in request.GET:
 		if(request.GET['search_input'] == "map"):
 			s_search_mode = "map"
+			i_per_page = 50
+
+
+	b_sort_direction = b_sort_direction.lower()
+
+	if b_sort_direction == "asc":
+		b_sort_direction = pymongo.ASCENDING
+	elif b_sort_direction == "desc":
+		b_sort_direction = pymongo.DESCENDING
 
 
 	mongo_client = MongoClient()
