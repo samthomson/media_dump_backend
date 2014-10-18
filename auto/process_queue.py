@@ -254,7 +254,7 @@ def process_video(s_id):
 
 	# create stills for gif and thumb
 	i_gif_width = Math.floor(i_thumb_height * 1.5)
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '.str(i_gif_width).':'.str(i_thumb_height).' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+str(i_gif_width)+':'+str(i_thumb_height)+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/output'+s_id+'_%05d.jpeg"', shell=True)
 	
 	# create tiny icon
 	make_thumb("../thumb/video/output"+s_id+"_00001.jpeg", "db", 32, s_id)
