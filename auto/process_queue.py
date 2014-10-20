@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os, sys, time, re, traceback
 import sqlite3 as sqlite
 #from easy_thumbnails.files import get_thumbnailer
