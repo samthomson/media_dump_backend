@@ -306,10 +306,15 @@ def process_thumbs(s_id):
 	s_source_path = s_seed_dir + s_path_from_id(s_id)
 
 	make_thumb(s_source_path, "db", 32, s_id)
+	
+	'''
 	make_thumb(s_source_path, "db", i_thumb_height, s_id)
 	make_thumb(s_source_path, "db", i_grid_thumb_height, s_id)
+	'''
+	# now we will make thumbs the classic way with 'physical' thumbs
 
 	#make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_thumb_height)
+	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
 	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
 
