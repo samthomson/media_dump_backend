@@ -271,6 +271,8 @@ def process_video(s_id):
 	# create still from first frame
 	make_thumb("../thumb/video/thumb"+s_id+"_00001.jpeg", "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
 
+	set_image_dimensions_to_db(s_id, "../thumb/thumb/" + s_id + '.jpg')
+
 
 	# save a base 64 image to db
 	contents = base64.encodestring(open("../thumb/video/thumb"+s_id+"_00001.jpeg",'rb').read())
@@ -329,6 +331,9 @@ def process_thumbs(s_id):
 
 	#make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_thumb_height)
 	make_thumb(s_source_path, "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
+
+	set_image_dimensions_to_db(s_id, "../thumb/thumb/" + s_id + '.jpg')
+
 	make_thumb(s_source_path, "../thumb/lightbox/" + s_id + '.jpg', 1200)
 
 
@@ -390,12 +395,19 @@ def set_on_document(i_document_id, s_property_name, s_value, b_unique = True):
 	#
 	collection_files.update({'file_id' : i_document_id}, {'$set': {s_property_name: s_value}}, b_unique)
 
-
+def t_get_image_dimensions(s_path):
+	return Image.open(s_path).size
 
 
 def s_path_from_id(s_file_id):
 	db_cursor.execute('''SELECT path FROM files WHERE id=?''', (s_file_id,))
 	return db_cursor.fetchone()[0]
+
+def set_image_dimensions_to_db(i_document_id, s_path):
+	t_dimensions = t_get_image_dimensions(s_path)
+	set_on_document(i_document_id, "width", t_dimensions[0])
+	set_on_document(i_document_id, "height", t_dimensions[1])
+
 
 """
 these should be shared
