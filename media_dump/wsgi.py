@@ -1,5 +1,9 @@
-activate_this = '/home/sam/.virtualenvs/media_dump_env/bin/activate_this.py'
-execfile(activate_this, dict(__file__=activate_this))
+# are we in a virtual env?
+try:
+	activate_this = '/home/sam/.virtualenvs/media_dump_env/bin/activate_this.py'
+	execfile(activate_this, dict(__file__=activate_this))
+except:
+	pass
 
 
 import os
@@ -10,7 +14,7 @@ import os
 
 import sys	
 
-path = '/var/www/media_dump'
+path = '/var/www/media_dump_backend'
 if path not in sys.path:
     sys.path.append(path)
 
