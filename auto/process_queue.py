@@ -258,17 +258,30 @@ def process_video(s_id):
 	i_gif_width = str(int(round(math.floor(i_thumb_height * 1.5))))
 	i_gif_height = str(int(round(i_thumb_height)))
 	
+	# generate still images from video, as jpegs
 	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+i_gif_width+':'+i_gif_height+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/thumb'+s_id+'_%05d.jpeg"', shell=True)
-	s_gif_path = "../thumb/video/thumb"+s_id+".gif"
+
+	#s_gif_path = "../thumb/video/thumb"+s_id+".gif"
+
+	'''
 	subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/thumb'+s_id+'_[0-9]*.jpeg" '+s_gif_path, shell=True)
+	'''
 	# create tiny icon
 	make_thumb("../thumb/video/thumb"+s_id+"_00001.jpeg", "db", 32, s_id)
-	purge("../thumb/video", 'thumb'+s_id+'_[0-9]*.jpeg')
+	# create still from first frame
+	make_thumb("../thumb/video/thumb"+s_id+"_00001.jpeg", "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
+
+
 	# save a base 64 image to db
+	contents = base64.encodestring(open("../thumb/video/thumb"+s_id+"_00001.jpeg",'rb').read())
+
+	purge("../thumb/video", 'thumb'+s_id+'_[0-9]*.jpeg')
+	'''
 	contents = base64.encodestring(open(s_gif_path,"rb").read())
 	os.remove(s_gif_path)
+	'''
 	
-
+	'''
 	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+str(i_grid_thumb_height)+':'+str(i_grid_thumb_height)+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/grid'+s_id+'_%05d.jpeg"', shell=True)	
 	
 	s_grid_gif_path = "../thumb/video/grid"+s_id+".gif"
@@ -276,21 +289,22 @@ def process_video(s_id):
 	purge("../thumb/video", 'grid'+s_id+'_[0-9]*.jpeg')
 	grid_contents = base64.encodestring(open(s_grid_gif_path,"rb").read())
 	os.remove(s_grid_gif_path)
-
+	'''
 	
 	
 	# insert or update
 	item = collection_files.find_one({'file_id': s_id});
 
+	'''
 	if item != None:
 		# item already exists, add tag to it
-		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_thumb_height): contents}}})
-		collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_grid_thumb_height): grid_contents}}})
+		#collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_thumb_height): contents}}})
+		#collection_files.update({'file_id' : s_id}, { '$push':{'base_images': {str(i_grid_thumb_height): grid_contents}}})
 	else:
 		# create document with tag as property
-		collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_thumb_height): contents}]})
-		collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_grid_thumb_height): grid_contents}]})
-		
+		#collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_thumb_height): contents}]})
+		#collection_files.insert({'file_id' : s_id, 'base_images': [{str(i_grid_thumb_height): grid_contents}]})
+	'''
 	
 
 	# create first frame for lightbox load
