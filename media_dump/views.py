@@ -255,6 +255,8 @@ def search(request):
 	for r in cursor:
 		f_lat = 0
 		f_lon = 0
+		i_width = -1
+		i_height = -1
 		s_thumb = ""
 
 		for t in r["tags"]:
@@ -268,7 +270,17 @@ def search(request):
 		except:
 			pass
 
-		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "data_thumb": s_thumb, "type": r["type"], "height": 180})
+		try:
+			i_width = r["width"]
+		except:
+			pass
+
+		try:
+			i_height = r["height"]
+		except:
+			pass
+
+		json_response_data['files'].append({"id": r['file_id'], "lat": f_lat, "lon": f_lon, "type": r["type"], "width": i_width, "height": i_height})
 
 	
 	t_filters = []
