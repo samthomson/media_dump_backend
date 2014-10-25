@@ -92,17 +92,18 @@ def process_path(i_id):
 	'''
 	split file path and tag accordingly
 	'''
-	s_path = absolute_from_relative_path(s_path_from_id(i_id).lower())
-	print "process path: %s" % s_path
-	s_path_no_ext = os.path.splitext(s_path)[0]
+	s_relative_path = s_path_from_id(i_id).lower()
+	s_absolute_path = absolute_from_relative_path(s_relative_path)
+	
+	s_path_no_ext = os.path.splitext(s_relative_path)[0]
 
 	s_path_folders = s_path_no_ext.rsplit('/',1)[0]
 	s_path_filename = s_path_no_ext.rsplit('/',1)[1]
-	s_extension = os.path.splitext(s_path)[1].replace('.','')
+	s_extension = os.path.splitext(s_relative_path)[1].replace('.','')
 
 	tag(i_id, "text", "*")
 
-	tag(i_id, "directory.path", s_path)
+	tag(i_id, "directory.path", s_relative_path)
 	tag(i_id, "directory.path_folders", s_path_folders)
 	tag(i_id, "directory.ext", s_extension)
 
@@ -112,7 +113,7 @@ def process_path(i_id):
 	if s_extension == "avi" or s_extension == "mp4":
 		set_on_document(i_id, "type", "video")
 
-	if(s_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
+	if(s_relative_path.endswith(('.jpg', '.JPG', '.jpeg', '.JPEG'))):
 		tag(i_id, "file.type", "image")
 
 	''' go through folder path
