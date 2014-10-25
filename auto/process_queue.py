@@ -4,7 +4,9 @@ import os, sys, time, re, traceback
 import sqlite3 as sqlite
 #from easy_thumbnails.files import get_thumbnailer
 
-execfile("get_lat_lon_exif_pil.py")
+#execfile("get_lat_lon_exif_pil.py")
+from get_lat_lon_exif_pil import *
+import get_lat_lon_exif_pil
 
 import pymongo
 from pymongo import MongoClient
@@ -18,7 +20,9 @@ import urllib2
 import requests
 import math
 
-execfile("queue.py")
+#execfile("queue.py")
+from queue import *
+import queue
 
 from datetime import date, timedelta
 import subprocess
@@ -28,7 +32,7 @@ import glob
 
 
 def process_faces(i_id):
-	s_path = s_seed_dir + s_path_from_id(i_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(i_id))
 
 	imagePath = s_path
 
@@ -88,7 +92,7 @@ def process_path(i_id):
 	'''
 	split file path and tag accordingly
 	'''
-	s_path = s_path_from_id(i_id).lower()
+	s_path = absolute_from_relative_path(s_path_from_id(i_id).lower())
 	print "process path: %s" % s_path
 	s_path_no_ext = os.path.splitext(s_path)[0]
 
@@ -135,7 +139,7 @@ def process_path(i_id):
 
 def process_exif_geo(i_id):
 	# get the lat lon tags and save as tags
-	s_path = s_seed_dir + s_path_from_id(i_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(i_id))
 
 	o_image = Image.open(s_path)
 	exif_data = get_exif_data(o_image)
@@ -150,7 +154,7 @@ def process_exif_geo(i_id):
 
 def process_places(i_id):
 	# get the lat lon tags and get place tags from google
-	s_path = s_seed_dir + s_path_from_id(i_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(i_id))
 
 	o_image = Image.open(s_path)
 	exif_data = get_exif_data(o_image)
@@ -192,7 +196,7 @@ def process_places(i_id):
 
 def process_elevation(i_id):
 	# get lat lon and query google for elevation
-	s_path = s_seed_dir + s_path_from_id(i_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(i_id))
 
 	o_image = Image.open(s_path)
 	exif_data = get_exif_data(o_image)
@@ -216,7 +220,7 @@ def process_elevation(i_id):
 			queue_file(i_id, "elevation", str(date.today() + timedelta(days=1)))
 
 def get_colors(infile, outfile = '', numcolors=1, swatchsize=20, resize=150):
- 
+	
 	image = Image.open(infile)
 	image = image.resize((resize, resize))
 	result = image.convert('P', palette=Image.ADAPTIVE, colors=numcolors)
@@ -227,7 +231,7 @@ def get_colors(infile, outfile = '', numcolors=1, swatchsize=20, resize=150):
 
 def process_colour(i_id):
 	# get lat lon and query google for elevation
-	s_path = s_seed_dir + s_path_from_id(i_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(i_id))
 
 	t_colours = get_colors(s_path)
 
@@ -239,59 +243,46 @@ def process_colour(i_id):
 
 def process_video(s_id):
 	# get lat lon and query google for elevation
-	s_path = s_seed_dir + s_path_from_id(s_id)
+	s_path = absolute_from_relative_path(s_seed_dir + s_path_from_id(s_id))
 
 	#
 	# convert to relevant formats
 	#
+	s_mp4_out = absolute_from_relative_path('../thumb/video/'+s_id+'.mp4')
+	s_ogv_out = absolute_from_relative_path('../thumb/video/'+s_id+'.ogv')
+	s_webm_out = absolute_from_relative_path('../thumb/video/'+s_id+'.webm')
 
 	# mp4
-	subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "../thumb/video/'+s_id+'.mp4" -acodec aac', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -b 900k -vcodec libx264 -g 30 -strict -2 "' + s_mp4_out + '" -acodec aac', shell=True)
 
 	# ogv 
-	subprocess.call('ffmpeg -i "'+s_path+'" -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "../thumb/video/'+s_id+'.ogv"', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -acodec libvorbis -ac 2 -ab 96k -ar 44100 -r 15 -b 900k "' + s_ogv_out + '"', shell=True)
 
 	# webm
-	subprocess.call('ffmpeg -i "'+s_path+'" -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "../thumb/video/'+s_id+'.webm"', shell=True)
+	subprocess.call('ffmpeg -i "'+s_path+'" -b 345k -vcodec libvpx -acodec libvorbis -ab 160000 -f webm -r 15 -g 40 "' + s_webm_out + '"', shell=True)
 
 	# create stills for gif and thumb
 	i_gif_width = str(int(round(math.floor(i_thumb_height * 1.5))))
 	i_gif_height = str(int(round(i_thumb_height)))
 	
 	# generate still images from video, as jpegs
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+i_gif_width+':'+i_gif_height+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/thumb'+s_id+'_%05d.jpeg"', shell=True)
+	s_raw_still_path = '../thumb/video/thumb'+s_id+'_1.jpeg'
+	s_still_path = absolute_from_relative_path('../thumb/video/thumb'+s_id+'_1.jpeg')
+	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+i_gif_width+':'+i_gif_height+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "' + s_still_path + '"', shell=True)
 
-	#s_gif_path = "../thumb/video/thumb"+s_id+".gif"
-
-	'''
-	subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/thumb'+s_id+'_[0-9]*.jpeg" '+s_gif_path, shell=True)
-	'''
+	
 	# create tiny icon
-	make_thumb("../thumb/video/thumb"+s_id+"_00001.jpeg", "db", 32, s_id)
+	make_thumb(s_raw_still_path, "db", 32, s_id)
 	# create still from first frame
-	make_thumb("../thumb/video/thumb"+s_id+"_00001.jpeg", "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
+	make_thumb(s_raw_still_path, "../thumb/thumb/" + s_id + '.jpg', i_grid_thumb_height)
 
 	set_image_dimensions_to_db(s_id, "../thumb/thumb/" + s_id + '.jpg')
 
 
 	# save a base 64 image to db
-	contents = base64.encodestring(open("../thumb/video/thumb"+s_id+"_00001.jpeg",'rb').read())
+	contents = base64.encodestring(open(s_still_path,'rb').read())
 
-	purge("../thumb/video", 'thumb'+s_id+'_[0-9]*.jpeg')
-	'''
-	contents = base64.encodestring(open(s_gif_path,"rb").read())
-	os.remove(s_gif_path)
-	'''
-	
-	'''
-	subprocess.call('ffmpeg -ss 00:00:00.000 -i "'+s_path+'" -s '+str(i_grid_thumb_height)+':'+str(i_grid_thumb_height)+' -t 00:00:30.000 -vf fps=fps=1/5 -vcodec mjpeg -qscale 10 "../thumb/video/grid'+s_id+'_%05d.jpeg"', shell=True)	
-	
-	s_grid_gif_path = "../thumb/video/grid"+s_id+".gif"
-	subprocess.call('convert -delay 60 -layers Optimize "../thumb/video/grid'+s_id+'_[0-9]*.jpeg" '+s_grid_gif_path, shell=True)	
-	purge("../thumb/video", 'grid'+s_id+'_[0-9]*.jpeg')
-	grid_contents = base64.encodestring(open(s_grid_gif_path,"rb").read())
-	os.remove(s_grid_gif_path)
-	'''
+	os.remove(s_still_path)
 	
 	
 	# insert or update
@@ -313,7 +304,7 @@ def process_video(s_id):
 	
 	
 def purge(dir, pattern):
-    for f in os.listdir(dir):
+    for f in os.listdir(absolute_from_relative_path(dir)):
     	if re.search(pattern, f):
     		os.remove(os.path.join(dir, f))
 
@@ -338,6 +329,10 @@ def process_thumbs(s_id):
 
 
 def make_thumb(s_in, s_out, i_target_height, s_file_id = None):
+	s_in = absolute_from_relative_path(s_in)
+	if s_out != "db":
+		s_out = absolute_from_relative_path(s_out)
+
 	targetHeight = i_target_height
 	img = Image.open(s_in)
 	hpercent = (targetHeight/float(img.size[1]))
@@ -345,6 +340,7 @@ def make_thumb(s_in, s_out, i_target_height, s_file_id = None):
 	img = img.resize((wsize,targetHeight), PIL.Image.ANTIALIAS)
 	if s_out != 'db':
 		# save a physical file
+		print "out: %s" % s_out
 		img.save(s_out)
 	else:
 		# save a base 64 image to db
@@ -404,9 +400,13 @@ def s_path_from_id(s_file_id):
 	return db_cursor.fetchone()[0]
 
 def set_image_dimensions_to_db(i_document_id, s_path):
+	s_path = absolute_from_relative_path(s_path)
 	t_dimensions = t_get_image_dimensions(s_path)
 	set_on_document(i_document_id, "width", t_dimensions[0])
 	set_on_document(i_document_id, "height", t_dimensions[1])
+
+def absolute_from_relative_path(s_relative_path):
+	return os.path.dirname(os.path.realpath(__file__)) + "/" + s_relative_path
 
 
 """
@@ -432,8 +432,10 @@ if __name__ == '__main__':
 	i_grid_thumb_height = 115
 
 	# connect to db
-	db = sqlite.connect('media_dump_db')
+	db = sqlite.connect(absolute_from_relative_path('media_dump_db'))
 	db_cursor = db.cursor()
+
+	queue.db_cursor = db_cursor
 
 	mongo_client = MongoClient()
 	# get mongo database

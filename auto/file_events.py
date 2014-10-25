@@ -7,7 +7,11 @@ from os import listdir
 
 import hashlib
 
-execfile("queue.py")
+#sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+#from queue import *
+import queue
+from queue import *
+
 
 def get_physical_files(s_base_dir):
 	fileList = []
@@ -83,12 +87,19 @@ def process_dead_file(s_path):
 	# TODO
 
 
+def absolute_from_relative_path(s_relative_path):
+	return os.path.dirname(os.path.realpath(__file__)) + "/" + s_relative_path
+
+
 if __name__ == '__main__':
 
-	s_seed_dir = '../media'
+	s_seed_dir = absolute_from_relative_path('../media')
 
-	db = sqlite.connect('media_dump_db')
+	s_db_path = absolute_from_relative_path('media_dump_db')
+
+	db = sqlite.connect(s_db_path)
 	db_cursor = db.cursor()
+	queue.db_cursor = db_cursor
 
 	i_found_files = 0
 	i_deleted_files = 0
