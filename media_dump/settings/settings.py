@@ -61,8 +61,12 @@ WSGI_APPLICATION = 'media_dump.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'media_dump_django',
+        'USER': get_env_variable('DB_USER'),
+        'PASSWORD': get_env_variable('DB_PASS'),
+        'HOST': '',
+        'PORT': '',
     }
 }
 
@@ -84,3 +88,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static_out")
+
+
+STATICFILES_DIRS = (
+    '/home/sam/.virtualenvs/tinker/lib/python2.7/site-packages/django/contrib/admin/static',
+    os.path.join(BASE_DIR, "media_dump/css"),
+)
